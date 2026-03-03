@@ -92,6 +92,20 @@ tr:hover td{background:var(--slate50)}
 /* Quadrant Labels */
 .quad-label{position:absolute;font-size:9px;font-weight:600;color:var(--slate500);opacity:.6;pointer-events:none}
 
+/* Concept Section */
+.concept{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:12px;padding:20px 24px;border:1px solid #bfdbfe;margin-bottom:16px}
+.concept h2{font-size:16px;font-weight:800;margin-bottom:12px;color:var(--slate900)}
+.concept h3{font-size:12px;font-weight:700;margin:14px 0 6px;color:var(--blue)}
+.concept p,.concept li{font-size:11px;color:var(--slate700);line-height:1.6}
+.concept ul{padding-left:16px}.concept li{padding:2px 0;list-style:disc}
+.concept .layer{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0}
+.concept .layer-card{background:#fff;border-radius:8px;padding:12px;border:1px solid #e2e8f0}
+.concept .layer-card h4{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:4px;letter-spacing:.3px}
+.concept .layer-card p{font-size:10px;margin:0}
+.concept .prod{background:#fff;border-radius:8px;padding:12px 16px;border:1px solid #e2e8f0;margin-top:12px}
+.concept .prod p{font-size:10px;margin:0}
+@media(max-width:800px){.concept .layer{grid-template-columns:1fr}}
+
 /* Footer */
 .foot{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200);margin-top:12px}
 .foot h3{font-size:12px;font-weight:700;margin-bottom:8px}
@@ -107,6 +121,66 @@ tr:hover td{background:var(--slate50)}
   <div class="hdr">
     <div><h1><b>plancraft</b> Marketing Performance Dashboard</h1></div>
     <div class="hdr-r"><strong>FY 2024</strong> vs FY 2023 &amp; Targets <span class="badge">PROTOTYPE v3</span></div>
+  </div>
+
+  <!-- CONCEPT: KPI STRUCTURE & DESIGN RATIONALE -->
+  <div class="concept" id="conceptBlock">
+    <h2>Concept: KPI Structure &amp; Visualization Logic</h2>
+    <p>This dashboard answers plancraft's core steering question: <strong>"Where do we spend how much money — and what do we get in return?"</strong> To move beyond a flat data table, the report is structured in three analytical layers, each serving a different decision-maker and decision type.</p>
+
+    <h3>Three-Layer KPI Framework</h3>
+    <div class="layer">
+      <div class="layer-card">
+        <h4>Layer 1 — Generation</h4>
+        <p><strong>Question:</strong> Are we reaching enough people?<br>
+        <strong>KPIs:</strong> Impressions, CTR, CPM, Clicks<br>
+        <strong>Why:</strong> Before conversion can happen, we need volume. CPM tracks buying efficiency (are we overpaying for reach?), CTR measures ad relevance. Declining impressions at stable spend = market saturation signal.</p>
+      </div>
+      <div class="layer-card">
+        <h4>Layer 2 — Conversion Quality</h4>
+        <p><strong>Question:</strong> Are we attracting the right people?<br>
+        <strong>KPIs:</strong> Click→MQL%, MQL→Deal%, CPL, CAC<br>
+        <strong>Why:</strong> Volume means nothing without quality. A channel with 10K clicks but 0.5% conversion is worse than 1K clicks at 15%. The funnel breakdown (CTR → Click→MQL → MQL→Deal) pinpoints exactly where leakage happens.</p>
+      </div>
+      <div class="layer-card">
+        <h4>Layer 3 — Revenue &amp; Sustainability</h4>
+        <p><strong>Question:</strong> Is the money well spent?<br>
+        <strong>KPIs:</strong> Revenue, ROAS, Net MRR, MRR/Deal, CAC Payback<br>
+        <strong>Why:</strong> Revenue shows the immediate return, but for a SaaS company, MRR matters more — it compounds. CAC Payback tells us how many months until a customer "pays for themselves." A channel with high ROAS but low MRR/Deal is generating one-time revenue, not sustainable growth.</p>
+      </div>
+    </div>
+
+    <h3>Dashboard Structure: Who Sees What</h3>
+    <p>The four tabs serve distinct audiences and decisions:</p>
+    <ul>
+      <li><strong>Management Summary</strong> — For CMO/leadership. Answers: "Are we on track?" in 30 seconds. KPI scorecards with traffic lights, automated insights (rule-based, not hardcoded), revenue/MRR trends, and a country×channel heatmap for portfolio-level decisions.</li>
+      <li><strong>Channel Performance</strong> — For marketing managers. Answers: "Where is efficiency improving or declining?" Full conversion funnel with YoY deltas in percentage points, CPM trends (are we overpaying?), efficiency quadrant (CPL vs CVR), and ROAS comparison.</li>
+      <li><strong>Campaign Operations</strong> — For campaign managers. Answers: "Which campaigns should I scale, pause, or optimize?" Net MRR bridge (how recurring revenue is built), CAC payback per channel, cross-channel campaign type analysis, and sortable detail table.</li>
+      <li><strong>Trends &amp; Pacing</strong> — For planning/finance. Answers: "Will we hit our annual targets?" Monthly trend lines, cumulative pacing vs targets with traffic lights, CAC and CVR trajectory analysis.</li>
+    </ul>
+
+    <h3>Design Decisions</h3>
+    <ul>
+      <li><strong>YoY comparison (FY24 vs FY23):</strong> A single snapshot is useless for steering — you need direction. Every metric shows whether it's improving or declining vs last year.</li>
+      <li><strong>Target attainment:</strong> YoY shows direction, but targets show ambition. A +10% YoY growth is bad if the target was +25%. Traffic lights (green/amber/red) make this instantly scannable.</li>
+      <li><strong>Percentage points (pp) for conversion deltas:</strong> "CTR grew +15%" is misleading if it went from 1.0% to 1.15%. Using pp (+0.15pp) is mathematically honest and industry standard.</li>
+      <li><strong>Net MRR over Revenue:</strong> For SaaS, recurring revenue is the valuation driver. The MRR Bridge waterfall shows how the recurring base grows: retained MRR + new MRR per channel − churn.</li>
+      <li><strong>Automated insights:</strong> Rule-based engine (6 rules) that dynamically surfaces top performers, risks, and reallocation opportunities. Not hardcoded — recalculates on every filter change.</li>
+      <li><strong>Campaign Type as cross-channel dimension:</strong> "How does all Retargeting perform?" across Google + Meta is more actionable than comparing platforms — it compares strategies.</li>
+    </ul>
+
+    <h3>Data Extensions &amp; Assumptions</h3>
+    <ul>
+      <li><strong>Monthly granularity:</strong> Annual totals distributed using construction-industry seasonality weights. In production: actual monthly data from ad platforms and CRM.</li>
+      <li><strong>FY23 baseline:</strong> Reverse-engineered from FY24 using channel-specific growth rates (SEO +25%, Paid +15%, LinkedIn +5%). In production: historical data from the data warehouse.</li>
+      <li><strong>Targets:</strong> Per-campaign targets with realistic ambition levels. In production: set during annual OKR planning.</li>
+      <li><strong>Territory:</strong> Sub-regions per country to enable geographic drill-down. In production: derived from campaign targeting or CRM location data.</li>
+      <li><strong>Net MRR:</strong> Assumes 90% annual retention (10% churn). In production: actual retention and churn from billing system (e.g. Stripe, Chargebee).</li>
+    </ul>
+
+    <div class="prod">
+      <p><strong>Production Implementation:</strong> This prototype demonstrates the KPI framework, visualization logic, and automated insight engine using a custom interactive dashboard — deliberately chosen to show the analytical thinking without platform constraints. In production, this would be implemented in <strong>Looker Studio</strong> or <strong>HubSpot Dashboards</strong> with live API connections to Google Ads, Meta Marketing API, LinkedIn Campaign Manager, GA4, and HubSpot CRM — enabling real-time data refresh, scheduled email reports, and team-wide access with role-based permissions.</p>
+    </div>
   </div>
 
   <!-- TABS -->
