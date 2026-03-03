@@ -69,7 +69,12 @@ body{font-family:'Inter',sans-serif;background:var(--slate100);color:var(--slate
 .card{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200)}
 .card.wide{grid-column:1/-1}
 .card h3{font-size:12px;font-weight:700;margin-bottom:2px}.card .sub{font-size:10px;color:var(--slate500);margin-bottom:4px}
-.formula{font-size:9px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin-bottom:10px;line-height:1.6}
+.formula{font-size:9px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:0;margin-bottom:10px;line-height:1.6}
+.formula summary{padding:6px 10px;cursor:pointer;font-weight:600;color:#6b7280;list-style:none;display:flex;align-items:center;gap:4px}
+.formula summary::before{content:'ℹ️';font-size:10px}
+.formula summary::after{content:'▸';font-size:8px;margin-left:auto;transition:transform .2s}
+.formula[open] summary::after{transform:rotate(90deg)}
+.formula .formula-body{padding:2px 10px 8px}
 .formula code{font-family:'SF Mono',Monaco,monospace;background:#e5e7eb;padding:1px 4px;border-radius:3px;font-size:8.5px;color:#374151}
 .formula .note{display:block;margin-top:3px;font-style:italic;color:#9ca3af}
 .cw{position:relative;height:280px}
@@ -92,9 +97,16 @@ tr:hover td{background:var(--slate50)}
 /* Quadrant Labels */
 .quad-label{position:absolute;font-size:9px;font-weight:600;color:var(--slate500);opacity:.6;pointer-events:none}
 
-/* Concept Section */
-.concept{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:12px;padding:20px 24px;border:1px solid #bfdbfe;margin-bottom:16px}
-.concept h2{font-size:16px;font-weight:800;margin-bottom:12px;color:var(--slate900)}
+/* Concept Section — Collapsible */
+.concept{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:12px;border:1px solid #bfdbfe;margin-bottom:16px;overflow:hidden}
+.concept-toggle{width:100%;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif}
+.concept-toggle h2{font-size:15px;font-weight:800;color:var(--slate900);margin:0;display:flex;align-items:center;gap:8px}
+.concept-toggle .hint{font-size:10px;font-weight:500;color:var(--slate500)}
+.concept-toggle .arrow{font-size:14px;color:var(--blue);transition:transform .2s;font-weight:700}
+.concept-toggle .arrow.open{transform:rotate(180deg)}
+.concept-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.concept-body.open{max-height:3000px}
+.concept-body-inner{padding:0 24px 20px}
 .concept h3{font-size:12px;font-weight:700;margin:14px 0 6px;color:var(--blue)}
 .concept p,.concept li{font-size:11px;color:var(--slate700);line-height:1.6}
 .concept ul{padding-left:16px}.concept li{padding:2px 0;list-style:disc}
@@ -125,7 +137,12 @@ tr:hover td{background:var(--slate50)}
 
   <!-- CONCEPT: KPI STRUCTURE & DESIGN RATIONALE -->
   <div class="concept" id="conceptBlock">
-    <h2>Concept: KPI Structure &amp; Visualization Logic</h2>
+    <button class="concept-toggle" onclick="const b=document.getElementById('conceptBody');b.classList.toggle('open');this.querySelector('.arrow').classList.toggle('open')">
+      <h2>Concept: KPI Structure &amp; Visualization Logic <span class="hint">— click to expand</span></h2>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="concept-body" id="conceptBody">
+    <div class="concept-body-inner">
     <p>This dashboard answers plancraft's core steering question: <strong>"Where do we spend how much money — and what do we get in return?"</strong> To move beyond a flat data table, the report is structured in three analytical layers, each serving a different decision-maker and decision type.</p>
 
     <h3>Three-Layer KPI Framework</h3>
@@ -181,6 +198,8 @@ tr:hover td{background:var(--slate50)}
     <div class="prod">
       <p><strong>Production Implementation:</strong> This prototype demonstrates the KPI framework, visualization logic, and automated insight engine using a custom interactive dashboard — deliberately chosen to show the analytical thinking without platform constraints. In production, this would be implemented in <strong>Looker Studio</strong> or <strong>HubSpot Dashboards</strong> with live API connections to Google Ads, Meta Marketing API, LinkedIn Campaign Manager, GA4, and HubSpot CRM — enabling real-time data refresh, scheduled email reports, and team-wide access with role-based permissions.</p>
     </div>
+    </div><!-- /concept-body-inner -->
+    </div><!-- /concept-body -->
   </div>
 
   <!-- TABS -->
@@ -203,7 +222,8 @@ tr:hover td{background:var(--slate50)}
 
   <!-- TAB 1: MANAGEMENT SUMMARY -->
   <div id="t-summary" class="tab-content active">
-    <div class="formula">
+    <details class="formula">
+      <summary>How to read: KPI Scorecards, Revenue vs Net MRR</summary><div class="formula-body">
       <strong>KPI Scorecards</strong> — Each card shows the FY24 value, YoY change vs FY23 (<code>YoY% = (FY24 − FY23) ÷ FY23 × 100</code>), and target attainment (<code>Attainment% = Actual ÷ Target × 100</code>).
       Traffic lights: <span style="color:#16a34a">●</span> ≥98% of target, <span style="color:#b45309">●</span> 90–98%, <span style="color:#dc2626">●</span> &lt;90%. For Spend, lower is better (inverted logic). ROAS = <code>Revenue ÷ Spend</code>.
       <br><br><strong>Revenue vs Net MRR — what's the difference?</strong><br>
@@ -211,9 +231,10 @@ tr:hover td{background:var(--slate50)}
       <code>MRR</code> (Monthly Recurring Revenue) = only the recurring subscription portion of a deal. For a SaaS company like Plancraft, this is the most important metric because it compounds: a customer paying €200/month generates €2,400/year, every year.<br>
       <code>Net MRR = New MRR (from won deals) − Churned MRR (lost customers)</code>. Positive Net MRR means the business is growing its recurring base. The MRR Bridge chart (Campaign Operations tab) shows this breakdown per channel.
       <span class="note">In this prototype: MRR per campaign is provided in the source data. Net MRR uses estimated 90% retention (10% annual churn) of FY23 MRR as the base. In production: MRR comes from the billing/subscription system (e.g. Stripe, Chargebee) with actual retention and churn figures.</span>
-    </div>
+    </div></details>
     <div class="kpi-row" id="kpiRow"></div>
-    <div class="formula">
+    <details class="formula">
+      <summary>How it works: Automated Insights Engine (6 rules)</summary><div class="formula-body">
       <strong>Automated Insights Engine</strong> — The insights below are <strong>not hardcoded</strong> — they are dynamically generated from the filtered dataset on every interaction. The engine runs 6 analysis rules:
       <strong>1)</strong> <em>Highest ROAS channel</em>: ranks all channels by <code>Revenue ÷ Spend</code>, surfaces the #1 performer.
       <strong>2)</strong> <em>Budget vs Revenue gap</em>: compares each channel's <code>% of total spend</code> vs <code>% of total revenue</code> — flags channels where revenue share exceeds spend share by &gt;5pp (= scaling opportunity) or vice versa (= reallocation candidate).
@@ -222,20 +243,20 @@ tr:hover td{background:var(--slate50)}
       <strong>5)</strong> <em>Rising CAC risk</em>: flags channels where <code>CAC YoY%</code> exceeds +5% — acquisition is getting more expensive.
       <strong>6)</strong> <em>Lowest ROAS channel</em>: identifies the weakest returning channel for budget review.
       <span class="note">All insights update instantly when you change filters (country, channel, period). In production: thresholds would be configurable and insights could trigger Slack/email alerts.</span>
-    </div>
+    </div></details>
     <div class="insights-grid" id="insightsGrid"></div>
     <div class="row">
       <div class="card"><h3>Monthly Revenue Trend</h3><div class="sub">FY24 actual vs FY23 vs FY24 target</div>
-        <div class="formula">Total revenue from closed deals per month. Three lines: FY24 actual (blue), FY23 baseline (grey dashed), and FY24 target (amber dashed). Monthly distribution uses construction-industry seasonality weights (peak: Mar–Jun, Sep–Nov).<span class="note">Gap between blue and amber = over/underperformance vs plan.</span></div>
+        <details class="formula"><summary>How to read: Revenue Trend</summary><div class="formula-body">Total revenue from closed deals per month. Three lines: FY24 actual (blue), FY23 baseline (grey dashed), and FY24 target (amber dashed). Monthly distribution uses construction-industry seasonality weights (peak: Mar–Jun, Sep–Nov).<span class="note">Gap between blue and amber = over/underperformance vs plan.</span></div></details>
         <div class="cw tall"><canvas id="c_revTrend"></canvas></div></div>
       <div class="card"><h3>Monthly Net MRR Trend</h3><div class="sub">Recurring revenue growth trajectory</div>
-        <div class="formula">This chart shows the <code>MRR</code> (Monthly Recurring Revenue) generated by new deals per month — the subscription revenue that repeats every month. Why this matters: a deal worth €10K in revenue might only generate €200/month in MRR, but that €200 compounds over years. For SaaS companies, MRR growth rate is the #1 valuation driver.<br><strong>How to read:</strong> FY24 (green) should be consistently above FY23 (grey dashed). The gap between the lines = MRR growth. A widening gap means accelerating growth; a narrowing gap means growth is slowing.<span class="note">Data source: MRR values from the campaign dataset. In production: pulled from billing system with actual subscription amounts, upgrades (expansion MRR), and cancellations (churned MRR).</span></div>
+        <details class="formula"><summary>How to read: Net MRR Trend</summary><div class="formula-body">This chart shows the <code>MRR</code> (Monthly Recurring Revenue) generated by new deals per month — the subscription revenue that repeats every month. Why this matters: a deal worth €10K in revenue might only generate €200/month in MRR, but that €200 compounds over years. For SaaS companies, MRR growth rate is the #1 valuation driver.<br><strong>How to read:</strong> FY24 (green) should be consistently above FY23 (grey dashed). The gap between the lines = MRR growth. A widening gap means accelerating growth; a narrowing gap means growth is slowing.<span class="note">Data source: MRR values from the campaign dataset. In production: pulled from billing system with actual subscription amounts, upgrades (expansion MRR), and cancellations (churned MRR).</span></div></details>
         <div class="cw tall"><canvas id="c_mrrTrend"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Country × Channel Performance Heatmap</h3>
       <div class="sub">ROAS by country and channel — green = high efficiency, red = needs attention</div>
-      <div class="formula"><code>ROAS = Revenue ÷ Spend</code> per country × channel combination. Color scale: <span style="color:#16a34a">■</span> ≥20x (excellent), <span style="color:#92400e">■</span> 10–20x (good), <span style="color:#b45309">■</span> 5–10x (acceptable), <span style="color:#dc2626">■</span> &lt;5x (needs review). Use this matrix to spot which markets and channels deliver the best return — and where budget reallocation may be needed.</div>
+      <details class="formula"><summary>How to read: ROAS Heatmap</summary><div class="formula-body"><code>ROAS = Revenue ÷ Spend</code> per country × channel combination. Color scale: <span style="color:#16a34a">■</span> ≥20x (excellent), <span style="color:#92400e">■</span> 10–20x (good), <span style="color:#b45309">■</span> 5–10x (acceptable), <span style="color:#dc2626">■</span> &lt;5x (needs review). Use this matrix to spot which markets and channels deliver the best return — and where budget reallocation may be needed.</div></details>
       <table class="heatmap" id="heatmap"></table>
     </div>
   </div>
@@ -244,16 +265,16 @@ tr:hover td{background:var(--slate50)}
   <div id="t-channels" class="tab-content">
     <div class="row">
       <div class="card"><h3>Impressions by Channel</h3><div class="sub">Reach: FY24 vs FY23 — are we growing visibility?</div>
-        <div class="formula"><code>Impressions</code> = number of times an ad or content was displayed. Compares FY24 (solid) vs FY23 (transparent) per channel. Growing impressions indicate increased brand visibility; declining impressions may signal reduced ad spend, lower organic rankings, or market saturation.<span class="note">For Organic Search: impressions = search engine result appearances. For Referral: partner website page views.</span></div>
+        <details class="formula"><summary>How to read: Impressions by Channel</summary><div class="formula-body"><code>Impressions</code> = number of times an ad or content was displayed. Compares FY24 (solid) vs FY23 (transparent) per channel. Growing impressions indicate increased brand visibility; declining impressions may signal reduced ad spend, lower organic rankings, or market saturation.<span class="note">For Organic Search: impressions = search engine result appearances. For Referral: partner website page views.</span></div></details>
         <div class="cw"><canvas id="c_impr"></canvas></div></div>
       <div class="card"><h3>CPM by Channel (€)</h3><div class="sub">Cost per 1,000 impressions — buying efficiency</div>
-        <div class="formula"><code>CPM = (Spend ÷ Impressions) × 1,000</code>. Measures how efficiently we buy reach. Lower CPM = cheaper visibility. Rising CPM YoY means the market is getting more expensive (more competition, higher bids) or our targeting is narrower.<span class="note">For Organic/Referral: CPM represents content production or partnership cost per 1K reach — not direct ad cost.</span></div>
+        <details class="formula"><summary>How to read: CPM (Cost Per Mille)</summary><div class="formula-body"><code>CPM = (Spend ÷ Impressions) × 1,000</code>. Measures how efficiently we buy reach. Lower CPM = cheaper visibility. Rising CPM YoY means the market is getting more expensive (more competition, higher bids) or our targeting is narrower.<span class="note">For Organic/Referral: CPM represents content production or partnership cost per 1K reach — not direct ad cost.</span></div></details>
         <div class="cw"><canvas id="c_cpm"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Conversion Rate Analysis</h3>
       <div class="sub">Full funnel conversion rates with YoY delta in percentage points</div>
-      <div class="formula">Three-stage funnel: <code>CTR = Clicks ÷ Impressions × 100</code> (ad relevance) → <code>Click→MQL = MQLs ÷ Clicks × 100</code> (landing page effectiveness) → <code>MQL→Deal = Deals ÷ MQLs × 100</code> (sales qualification quality). YoY deltas shown in <strong>percentage points (pp)</strong>, not percentages — e.g. "+2.1pp" means the rate rose from 10.0% to 12.1%. Also: <code>CPL = Spend ÷ MQLs</code> (cost per lead) and <code>CAC = Spend ÷ Deals</code> (cost to acquire one customer).<span class="note">A channel with high CTR but low Click→MQL has a targeting or landing page problem. High Click→MQL but low MQL→Deal points to weak lead qualification.</span></div>
+      <details class="formula"><summary>How to read: Conversion Rate Analysis</summary><div class="formula-body">Three-stage funnel: <code>CTR = Clicks ÷ Impressions × 100</code> (ad relevance) → <code>Click→MQL = MQLs ÷ Clicks × 100</code> (landing page effectiveness) → <code>MQL→Deal = Deals ÷ MQLs × 100</code> (sales qualification quality). YoY deltas shown in <strong>percentage points (pp)</strong>, not percentages — e.g. "+2.1pp" means the rate rose from 10.0% to 12.1%. Also: <code>CPL = Spend ÷ MQLs</code> (cost per lead) and <code>CAC = Spend ÷ Deals</code> (cost to acquire one customer).<span class="note">A channel with high CTR but low Click→MQL has a targeting or landing page problem. High Click→MQL but low MQL→Deal points to weak lead qualification.</span></div></details>
       <table id="tConv"></table>
     </div>
     <div class="row">
@@ -731,6 +752,29 @@ function renderTrends(){
 // ================================================================
 function renderAll(){const fd=gf();if(AT==='summary')renderSummary(fd);if(AT==='channels')renderChannels(fd);if(AT==='campaigns')renderCampaigns(fd);if(AT==='trends')renderTrends();}
 pf();renderAll();
+
+// ================================================================
+// AUTO-CONVERT FORMULA BLOCKS TO COLLAPSIBLE <details>
+// ================================================================
+document.querySelectorAll('.formula').forEach(div=>{
+  if(div.tagName==='DETAILS')return; // already converted
+  const details=document.createElement('details');
+  details.className='formula';
+  const summary=document.createElement('summary');
+  // Extract title from first <strong> or first <code> or use generic
+  const strong=div.querySelector('strong');
+  const code=div.querySelector('code');
+  let title='How to read this';
+  if(strong&&strong.textContent.length<60)title=strong.textContent.replace(/[—:]+$/,'').trim();
+  else if(code&&code.textContent.length<40)title='Formula: '+code.textContent;
+  summary.textContent=title;
+  const body=document.createElement('div');
+  body.className='formula-body';
+  body.innerHTML=div.innerHTML;
+  details.appendChild(summary);
+  details.appendChild(body);
+  div.replaceWith(details);
+});
 </script>
 </body>
 </html>
