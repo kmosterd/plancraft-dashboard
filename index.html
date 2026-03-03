@@ -134,6 +134,16 @@ tr:hover td{background:var(--slate50)}
       Traffic lights: <span style="color:#16a34a">●</span> ≥98% of target, <span style="color:#b45309">●</span> 90–98%, <span style="color:#dc2626">●</span> &lt;90%. For Spend, lower is better (inverted logic). ROAS = <code>Revenue ÷ Spend</code>.
     </div>
     <div class="kpi-row" id="kpiRow"></div>
+    <div class="formula">
+      <strong>Automated Insights Engine</strong> — The insights below are <strong>not hardcoded</strong> — they are dynamically generated from the filtered dataset on every interaction. The engine runs 6 analysis rules:
+      <strong>1)</strong> <em>Highest ROAS channel</em>: ranks all channels by <code>Revenue ÷ Spend</code>, surfaces the #1 performer.
+      <strong>2)</strong> <em>Budget vs Revenue gap</em>: compares each channel's <code>% of total spend</code> vs <code>% of total revenue</code> — flags channels where revenue share exceeds spend share by &gt;5pp (= scaling opportunity) or vice versa (= reallocation candidate).
+      <strong>3)</strong> <em>MRR growth leader</em>: ranks channels by <code>MRR YoY%</code> to identify which channel builds the most recurring revenue.
+      <strong>4)</strong> <em>Best/worst campaign</em>: ranks all individual campaigns by ROAS to surface standout performers and underperformers.
+      <strong>5)</strong> <em>Rising CAC risk</em>: flags channels where <code>CAC YoY%</code> exceeds +5% — acquisition is getting more expensive.
+      <strong>6)</strong> <em>Lowest ROAS channel</em>: identifies the weakest returning channel for budget review.
+      <span class="note">All insights update instantly when you change filters (country, channel, period). In production: thresholds would be configurable and insights could trigger Slack/email alerts.</span>
+    </div>
     <div class="insights-grid" id="insightsGrid"></div>
     <div class="row">
       <div class="card"><h3>Monthly Revenue Trend</h3><div class="sub">FY24 actual vs FY23 vs FY24 target</div>
@@ -436,19 +446,26 @@ function renderSummary(fd){
   // Campaign level insights
   const campStats=fd.map(r=>{const roas=r.spend>0?r.revenue/r.spend:0;const cac=r.deals>0?r.spend/r.deals:0;return{...r,roas,cac};}).sort((a,b)=>b.roas-a.roas);
 
-  let ins=`<div class="insight-card"><h4><span class="dot" style="background:var(--green)"></span> Top Performers &amp; Opportunities</h4>`;
-  ins+=`<div class="insight-item"><strong>${best.ch}</strong> delivers the highest ROAS at <span class="metric up">${best.roas.toFixed(1)}x</span> — earning €${(best.roas).toFixed(0)} for every €1 spent</div>`;
-  if(biggestGap)ins+=`<div class="insight-item"><strong>${biggestGap.ch}</strong> generates <span class="metric">${biggestGap.revShare.toFixed(0)}%</span> of revenue with only <span class="metric">${biggestGap.spendShare.toFixed(0)}%</span> of budget — <strong class="up">opportunity to scale</strong></div>`;
-  ins+=`<div class="insight-item"><strong>${risingMrr.ch}</strong> shows strongest MRR growth at <span class="metric up">${fm.d(risingMrr.mrrYoy)}</span> YoY — building sustainable recurring revenue</div>`;
-  if(campStats[0])ins+=`<div class="insight-item">Best campaign: <strong>${campStats[0].campaign}</strong> (${campStats[0].country}) with <span class="metric">${campStats[0].roas.toFixed(0)}x ROAS</span></div>`;
+  // Build filter context label
+  const fCtx=[];
+  if(F.c!=='all')fCtx.push(F.c);if(F.ch!=='all')fCtx.push(F.ch);if(F.ty!=='all')fCtx.push(F.ty);if(F.p!=='fy')fCtx.push(MN[+F.p]);
+  const ctxLabel=fCtx.length?fCtx.join(' › '):'All Countries › All Channels › Full Year';
+
+  let ins=`<div class="insight-card"><h4><span class="dot" style="background:var(--green)"></span> Top Performers &amp; Opportunities <span style="margin-left:auto;font-size:8px;background:#dcfce7;color:#16a34a;padding:2px 6px;border-radius:10px;font-weight:600;text-transform:none;letter-spacing:0">⚡ Auto-generated from ${fd.length} data points</span></h4>`;
+  ins+=`<div style="font-size:9px;color:#9ca3af;margin-bottom:6px;font-style:italic">Context: ${ctxLabel} — insights recalculate on every filter change</div>`;
+  ins+=`<div class="insight-item"><strong>${best.ch}</strong> delivers the highest ROAS at <span class="metric up">${best.roas.toFixed(1)}x</span> — earning €${(best.roas).toFixed(0)} for every €1 spent <span style="font-size:8px;color:#9ca3af">[rule: max(Revenue÷Spend) by channel]</span></div>`;
+  if(biggestGap)ins+=`<div class="insight-item"><strong>${biggestGap.ch}</strong> generates <span class="metric">${biggestGap.revShare.toFixed(0)}%</span> of revenue with only <span class="metric">${biggestGap.spendShare.toFixed(0)}%</span> of budget — <strong class="up">opportunity to scale</strong> <span style="font-size:8px;color:#9ca3af">[rule: revenue share &gt; spend share + 5pp]</span></div>`;
+  ins+=`<div class="insight-item"><strong>${risingMrr.ch}</strong> shows strongest MRR growth at <span class="metric up">${fm.d(risingMrr.mrrYoy)}</span> YoY — building sustainable recurring revenue <span style="font-size:8px;color:#9ca3af">[rule: max(MRR YoY%) by channel]</span></div>`;
+  if(campStats[0])ins+=`<div class="insight-item">Best campaign: <strong>${campStats[0].campaign}</strong> (${campStats[0].country}) with <span class="metric">${campStats[0].roas.toFixed(0)}x ROAS</span> <span style="font-size:8px;color:#9ca3af">[rule: max(Revenue÷Spend) by campaign]</span></div>`;
   ins+=`</div>`;
 
-  ins+=`<div class="insight-card"><h4><span class="dot" style="background:var(--red)"></span> Risks &amp; Action Items</h4>`;
-  ins+=`<div class="insight-item"><strong>${worst.ch}</strong> has the lowest ROAS at <span class="metric dn">${worst.roas.toFixed(1)}x</span> — review budget allocation and targeting</div>`;
-  if(risingCac.cacYoy>5)ins+=`<div class="insight-item"><strong>${risingCac.ch}</strong> CAC increased <span class="metric dn">${fm.d(risingCac.cacYoy)}</span> YoY to €${risingCac.cac.toFixed(0)} — acquisition getting more expensive</div>`;
-  if(overSpend)ins+=`<div class="insight-item"><strong>${overSpend.ch}</strong> consumes <span class="metric">${overSpend.spendShare.toFixed(0)}%</span> of budget but only delivers <span class="metric">${overSpend.revShare.toFixed(0)}%</span> of revenue — <strong class="dn">consider reallocation</strong></div>`;
+  ins+=`<div class="insight-card"><h4><span class="dot" style="background:var(--red)"></span> Risks &amp; Action Items <span style="margin-left:auto;font-size:8px;background:#fef2f2;color:#dc2626;padding:2px 6px;border-radius:10px;font-weight:600;text-transform:none;letter-spacing:0">⚡ Auto-generated from ${fd.length} data points</span></h4>`;
+  ins+=`<div style="font-size:9px;color:#9ca3af;margin-bottom:6px;font-style:italic">Context: ${ctxLabel} — insights recalculate on every filter change</div>`;
+  ins+=`<div class="insight-item"><strong>${worst.ch}</strong> has the lowest ROAS at <span class="metric dn">${worst.roas.toFixed(1)}x</span> — review budget allocation and targeting <span style="font-size:8px;color:#9ca3af">[rule: min(Revenue÷Spend) by channel]</span></div>`;
+  if(risingCac.cacYoy>5)ins+=`<div class="insight-item"><strong>${risingCac.ch}</strong> CAC increased <span class="metric dn">${fm.d(risingCac.cacYoy)}</span> YoY to €${risingCac.cac.toFixed(0)} — acquisition getting more expensive <span style="font-size:8px;color:#9ca3af">[rule: CAC YoY% &gt; +5%]</span></div>`;
+  if(overSpend)ins+=`<div class="insight-item"><strong>${overSpend.ch}</strong> consumes <span class="metric">${overSpend.spendShare.toFixed(0)}%</span> of budget but only delivers <span class="metric">${overSpend.revShare.toFixed(0)}%</span> of revenue — <strong class="dn">consider reallocation</strong> <span style="font-size:8px;color:#9ca3af">[rule: spend share &gt; revenue share + 5pp]</span></div>`;
   const worstCamp=campStats[campStats.length-1];
-  if(worstCamp)ins+=`<div class="insight-item">Weakest campaign: <strong>${worstCamp.campaign}</strong> (${worstCamp.country}) at <span class="metric dn">${worstCamp.roas.toFixed(1)}x ROAS</span>, €${worstCamp.cac.toFixed(0)} CAC</div>`;
+  if(worstCamp)ins+=`<div class="insight-item">Weakest campaign: <strong>${worstCamp.campaign}</strong> (${worstCamp.country}) at <span class="metric dn">${worstCamp.roas.toFixed(1)}x ROAS</span>, €${worstCamp.cac.toFixed(0)} CAC <span style="font-size:8px;color:#9ca3af">[rule: min(Revenue÷Spend) by campaign]</span></div>`;
   ins+=`</div>`;
   document.getElementById('insightsGrid').innerHTML=ins;
 
