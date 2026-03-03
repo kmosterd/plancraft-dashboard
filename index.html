@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plancraft – Marketing Performance Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--slate50:#f8fafc;--slate100:#f1f5f9;--slate200:#e2e8f0;--slate500:#64748b;--slate700:#334155;--slate900:#0f172a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--slate100);color:var(--slate900);line-height:1.5;font-size:13px}
+.db{max-width:1480px;margin:0 auto;padding:16px 24px}
+
+/* Header */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 0 12px;border-bottom:2px solid var(--slate200);margin-bottom:0}
+.hdr h1{font-size:20px;font-weight:800;letter-spacing:-.5px}.hdr h1 b{color:var(--blue)}
+.hdr-r{text-align:right;font-size:11px;color:var(--slate500)}.hdr-r strong{color:var(--slate900)}
+.badge{display:inline-block;background:#dbeafe;color:#2563eb;padding:1px 8px;border-radius:16px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle}
+
+/* Tabs - BIG and visible */
+.tabs{display:flex;background:#fff;border-radius:12px;margin:16px 0;padding:4px;gap:4px;border:1px solid var(--slate200);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.tab-btn{flex:1;padding:12px 16px;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;color:var(--slate500);background:transparent;border:none;border-radius:8px;cursor:pointer;transition:all .2s;text-align:center;line-height:1.3}
+.tab-btn:hover{color:var(--slate900);background:var(--slate50)}
+.tab-btn.active{color:#fff;background:var(--blue);box-shadow:0 2px 8px rgba(59,130,246,.3)}
+.tab-btn small{display:block;font-weight:400;font-size:10px;opacity:.7;margin-top:2px}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:2px}
+.fg label{font-size:9px;font-weight:700;color:var(--slate500);text-transform:uppercase;letter-spacing:.5px}
+.fg select{padding:6px 26px 6px 8px;border:1px solid var(--slate200);border-radius:6px;font-size:11px;font-family:'Inter',sans-serif;background:#fff;color:var(--slate900);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;min-width:130px}
+.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,.15)}
+.f-reset{padding:6px 12px;border:1px solid var(--slate200);border-radius:6px;background:#fff;font-size:11px;font-family:'Inter',sans-serif;color:var(--slate500);cursor:pointer}
+
+/* Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid var(--slate200);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.g::before{background:var(--green)}.kpi.y::before{background:var(--amber)}.kpi.r::before{background:var(--red)}
+.kpi-l{font-size:9px;font-weight:700;color:var(--slate500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.kpi-v{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.kpi-m{display:flex;flex-direction:column;gap:2px}
+.tag{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;display:inline-flex;align-items:center;gap:2px;width:fit-content}
+.tag.up{background:#dcfce7;color:#16a34a}.tag.dn{background:#fef2f2;color:#dc2626}.tag.fl{background:var(--slate100);color:var(--slate500)}
+.tgt{font-size:9px;color:var(--slate500)}.tgt.hit{color:#16a34a}.tgt.miss{color:#dc2626}.tgt.close{color:#b45309}
+
+/* Insight Cards */
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.insight-card{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200)}
+.insight-card h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.insight-card h4 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.insight-item{font-size:11px;color:var(--slate700);padding:5px 0;border-bottom:1px solid var(--slate100);line-height:1.4}
+.insight-item:last-child{border:none}
+.insight-item strong{color:var(--slate900)}
+.insight-item .metric{font-weight:700;font-size:12px}
+.insight-item .up{color:#16a34a}.insight-item .dn{color:#dc2626}
+
+/* Heatmap */
+.heatmap{width:100%;border-collapse:collapse;font-size:11px}
+.heatmap th{padding:8px 10px;font-size:9px;font-weight:700;text-transform:uppercase;border-bottom:2px solid var(--slate200)}
+.heatmap td{padding:6px 10px;text-align:center;font-weight:600;font-size:11px;border-bottom:1px solid var(--slate100)}
+.hm-cell{border-radius:4px;padding:4px 8px;display:inline-block;min-width:50px}
+
+/* Grid */
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.row.tri{grid-template-columns:1fr 1fr 1fr}
+.card{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200)}
+.card.wide{grid-column:1/-1}
+.card h3{font-size:12px;font-weight:700;margin-bottom:2px}.card .sub{font-size:10px;color:var(--slate500);margin-bottom:10px}
+.cw{position:relative;height:280px}
+.cw.tall{height:340px}
+
+/* Tables */
+.tc{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200);margin-bottom:16px;overflow-x:auto}
+.tc h3{font-size:12px;font-weight:700;margin-bottom:2px}.tc .sub{font-size:10px;color:var(--slate500);margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;padding:7px 8px;border-bottom:2px solid var(--slate200);font-weight:700;color:var(--slate500);text-transform:uppercase;letter-spacing:.3px;font-size:9px;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--slate900)}
+td{padding:7px 8px;border-bottom:1px solid var(--slate100);white-space:nowrap}
+tr:hover td{background:var(--slate50)}
+.tr{text-align:right}
+.up{color:#16a34a;font-weight:600}.dn{color:#dc2626;font-weight:600}.fl{color:var(--slate500)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.sep{border-left:2px solid var(--slate200)!important;padding-left:8px!important}
+.tot td{font-weight:700;border-top:2px solid var(--slate900)}
+
+/* Quadrant Labels */
+.quad-label{position:absolute;font-size:9px;font-weight:600;color:var(--slate500);opacity:.6;pointer-events:none}
+
+/* Footer */
+.foot{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200);margin-top:12px}
+.foot h3{font-size:12px;font-weight:700;margin-bottom:8px}
+.foot li{font-size:10px;color:var(--slate500);padding:2px 0 2px 12px;position:relative;list-style:none}
+.foot li::before{content:'→';position:absolute;left:0;color:var(--blue)}
+
+@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}.row,.insights-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr)}.tabs{flex-wrap:wrap}.filters{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="db">
+  <div class="hdr">
+    <div><h1><b>plancraft</b> Marketing Performance Dashboard</h1></div>
+    <div class="hdr-r"><strong>FY 2024</strong> vs FY 2023 &amp; Targets <span class="badge">PROTOTYPE v3</span></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabBar">
+    <button class="tab-btn active" data-tab="summary">Management Summary<small>Executive Overview &amp; Insights</small></button>
+    <button class="tab-btn" data-tab="channels">Channel Performance<small>Reach, CPM, Conversion Rates</small></button>
+    <button class="tab-btn" data-tab="campaigns">Campaign Operations<small>Deep Dive, MRR, Funnel</small></button>
+    <button class="tab-btn" data-tab="trends">Trends &amp; Pacing<small>Monthly Tracking vs Targets</small></button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="fg"><label>Period</label><select id="fP"></select></div>
+    <div class="fg"><label>Country</label><select id="fC"></select></div>
+    <div class="fg"><label>Territory</label><select id="fT"></select></div>
+    <div class="fg"><label>Channel</label><select id="fCh"></select></div>
+    <div class="fg"><label>Campaign Type</label><select id="fTy"></select></div>
+    <button class="f-reset" onclick="resetF()">Reset</button>
+  </div>
+
+  <!-- TAB 1: MANAGEMENT SUMMARY -->
+  <div id="t-summary" class="tab-content active">
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="insights-grid" id="insightsGrid"></div>
+    <div class="row">
+      <div class="card"><h3>Monthly Revenue Trend</h3><div class="sub">FY24 actual vs FY23 vs FY24 target</div><div class="cw tall"><canvas id="c_revTrend"></canvas></div></div>
+      <div class="card"><h3>Monthly Net MRR Trend</h3><div class="sub">Recurring revenue growth trajectory</div><div class="cw tall"><canvas id="c_mrrTrend"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <h3>Country × Channel Performance Heatmap</h3>
+      <div class="sub">ROAS by country and channel — green = high efficiency, red = needs attention</div>
+      <table class="heatmap" id="heatmap"></table>
+    </div>
+  </div>
+
+  <!-- TAB 2: CHANNEL PERFORMANCE -->
+  <div id="t-channels" class="tab-content">
+    <div class="row">
+      <div class="card"><h3>Impressions by Channel</h3><div class="sub">Reach: FY24 vs FY23 — are we growing visibility?</div><div class="cw"><canvas id="c_impr"></canvas></div></div>
+      <div class="card"><h3>CPM by Channel (€)</h3><div class="sub">Cost per 1,000 impressions — buying efficiency</div><div class="cw"><canvas id="c_cpm"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <h3>Conversion Rate Analysis</h3>
+      <div class="sub">Full funnel conversion rates with YoY delta in percentage points — identify where quality is improving or declining</div>
+      <table id="tConv"></table>
+    </div>
+    <div class="row">
+      <div class="card"><h3>Efficiency Quadrant</h3><div class="sub">CPL vs CVR — top-left = best (low cost, high conversion)</div><div class="cw tall"><canvas id="c_eff"></canvas></div></div>
+      <div class="card"><h3>ROAS by Channel</h3><div class="sub">Revenue return per euro spent: FY24 vs FY23</div><div class="cw tall"><canvas id="c_roas"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <h3>Full Channel Table</h3>
+      <div class="sub">All KPIs per channel with volume, conversion, efficiency, and revenue metrics</div>
+      <table id="tChan"></table>
+    </div>
+  </div>
+
+  <!-- TAB 3: CAMPAIGN OPERATIONS -->
+  <div id="t-campaigns" class="tab-content">
+    <div class="row">
+      <div class="card"><h3>Net MRR Bridge</h3><div class="sub">How recurring revenue is built: base → new per channel → churn → ending</div><div class="cw tall"><canvas id="c_mrrBridge"></canvas></div></div>
+      <div class="card"><h3>MRR per Deal &amp; CAC Payback</h3><div class="sub">Customer quality: higher MRR/deal = faster payback</div><div class="cw tall"><canvas id="c_mrrDeal"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <h3>Campaign Type Comparison</h3>
+      <div class="sub">Cross-channel view: how does Retargeting perform across Google + Meta? How does Content compare to Paid?</div>
+      <table id="tType"></table>
+    </div>
+    <div class="tc">
+      <h3>Campaign Detail</h3>
+      <div class="sub">All 36 campaigns with full metrics — click headers to sort</div>
+      <table id="tDetail"></table>
+    </div>
+  </div>
+
+  <!-- TAB 4: TRENDS & PACING -->
+  <div id="t-trends" class="tab-content">
+    <div class="row">
+      <div class="card"><h3>Monthly MQLs</h3><div class="sub">Lead volume: FY24 vs FY23</div><div class="cw"><canvas id="c_tMql"></canvas></div></div>
+      <div class="card"><h3>Monthly Deals Won</h3><div class="sub">Conversion volume: FY24 vs FY23</div><div class="cw"><canvas id="c_tDeals"></canvas></div></div>
+    </div>
+    <div class="row">
+      <div class="card"><h3>Monthly CAC (€)</h3><div class="sub">Acquisition cost trend — lower is better</div><div class="cw"><canvas id="c_tCac"></canvas></div></div>
+      <div class="card"><h3>Monthly CVR (MQL → Deal %)</h3><div class="sub">Lead quality trend</div><div class="cw"><canvas id="c_tCvr"></canvas></div></div>
+    </div>
+    <div class="tc">
+      <h3>Monthly Pacing vs Annual Target</h3>
+      <div class="sub">Cumulative progress — are we on track to hit FY24 goals?</div>
+      <table id="tPace"></table>
+    </div>
+  </div>
+
+  <div class="foot">
+    <h3>Assumptions &amp; Methodology</h3>
+    <ul>
+      <li><strong>LY (FY23):</strong> Simulated growth rates per channel (SEO ~25-33%, Paid ~10-22%, LinkedIn ~5-8%). Production: data warehouse.</li>
+      <li><strong>Targets:</strong> Per-channel targets. SEO exceeded; LinkedIn missed. Production: annual planning OKRs.</li>
+      <li><strong>Monthly:</strong> Annual totals distributed with construction-industry seasonality + deterministic variation.</li>
+      <li><strong>Net MRR:</strong> New campaign MRR minus ~10% estimated churn. Production: billing/subscription data.</li>
+      <li><strong>CPM:</strong> (Spend ÷ Impressions) × 1,000. For Organic/Referral: content/partnership cost per 1K reach.</li>
+      <li><strong>CAC Payback:</strong> CAC ÷ MRR/Deal — months to recover acquisition cost from recurring revenue.</li>
+      <li><strong>Heatmap ROAS:</strong> Revenue ÷ Spend per country×channel combination.</li>
+      <li><strong>Insights:</strong> Auto-generated from data. In production: configurable thresholds + Slack alerts.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DATA
+// ================================================================
+const R=[
+{c:"Germany",ch:"Google Ads",n:"GA_Search_Brand",s:8270,i:196867,cl:9455,m:1164,d:255,r:360570,mr:47177},
+{c:"Germany",ch:"Google Ads",n:"GA_Search_Generic",s:5426,i:137498,cl:6138,m:675,d:163,r:238143,mr:34965},
+{c:"Germany",ch:"Google Ads",n:"GA_Display_Retargeting",s:7949,i:249041,cl:4301,m:293,d:47,r:38587,mr:10194},
+{c:"Germany",ch:"Meta Ads",n:"MA_Lead_Form",s:9666,i:206730,cl:5373,m:293,d:86,r:85054,mr:20332},
+{c:"Germany",ch:"Meta Ads",n:"MA_Lookalike",s:4005,i:117435,cl:3589,m:392,d:42,r:60732,mr:7267},
+{c:"Germany",ch:"Meta Ads",n:"MA_Retargeting",s:6393,i:191699,cl:9141,m:971,d:171,r:195795,mr:34186},
+{c:"Germany",ch:"LinkedIn Ads",n:"LI_Tradespeople_Campaign",s:7235,i:204555,cl:3044,m:302,d:32,r:32160,mr:6630},
+{c:"Germany",ch:"LinkedIn Ads",n:"LI_Construction_Leads",s:2585,i:250551,cl:10075,m:932,d:131,r:167156,mr:29718},
+{c:"Germany",ch:"Organic Search",n:"SEO_Blog",s:7873,i:252283,cl:12003,m:1674,d:367,r:392690,mr:56650},
+{c:"Germany",ch:"Organic Search",n:"SEO_Landing_Pages",s:2016,i:105591,cl:4622,m:576,d:119,r:120904,mr:29685},
+{c:"Germany",ch:"Referral",n:"Partner_Program_A",s:9571,i:286584,cl:6262,m:416,d:42,r:55440,mr:8274},
+{c:"Germany",ch:"Referral",n:"Partner_Program_B",s:3027,i:183767,cl:1878,m:247,d:59,r:86966,mr:10499},
+{c:"Austria",ch:"Google Ads",n:"GA_Search_Brand",s:6892,i:184633,cl:4493,m:276,d:75,r:62400,mr:17876},
+{c:"Austria",ch:"Google Ads",n:"GA_Search_Generic",s:3454,i:127373,cl:2930,m:360,d:81,r:109026,mr:18207},
+{c:"Austria",ch:"Google Ads",n:"GA_Display_Retargeting",s:9110,i:208338,cl:8423,m:893,d:226,r:269392,mr:55439},
+{c:"Austria",ch:"Meta Ads",n:"MA_Lead_Form",s:6977,i:172409,cl:4753,m:333,d:92,r:95680,mr:16843},
+{c:"Austria",ch:"Meta Ads",n:"MA_Lookalike",s:7019,i:261428,cl:5221,m:475,d:119,r:99365,mr:24428},
+{c:"Austria",ch:"Meta Ads",n:"MA_Retargeting",s:4157,i:93585,cl:3273,m:260,d:31,r:25637,mr:6424},
+{c:"Austria",ch:"LinkedIn Ads",n:"LI_Tradespeople_Campaign",s:6450,i:68047,cl:2878,m:401,d:65,r:66560,mr:16122},
+{c:"Austria",ch:"LinkedIn Ads",n:"LI_Construction_Leads",s:2306,i:187848,cl:8024,m:1091,d:110,r:138050,mr:17329},
+{c:"Austria",ch:"Organic Search",n:"SEO_Blog",s:5413,i:315892,cl:11908,m:916,d:136,r:159528,mr:24557},
+{c:"Austria",ch:"Organic Search",n:"SEO_Landing_Pages",s:2495,i:118840,cl:3108,m:175,d:26,r:27742,mr:4396},
+{c:"Austria",ch:"Referral",n:"Partner_Program_A",s:8554,i:117172,cl:2506,m:134,d:29,r:41789,mr:5129},
+{c:"Austria",ch:"Referral",n:"Partner_Program_B",s:1854,i:319536,cl:11303,m:1334,d:275,r:404525,mr:54595},
+{c:"France",ch:"Google Ads",n:"GA_Search_Brand",s:5931,i:233734,cl:9457,m:697,d:171,r:184509,mr:32023},
+{c:"France",ch:"Google Ads",n:"GA_Search_Generic",s:8777,i:139045,cl:4370,m:257,d:68,r:62764,mr:12884},
+{c:"France",ch:"Google Ads",n:"GA_Display_Retargeting",s:3511,i:65708,cl:2913,m:240,d:34,r:38930,mr:7970},
+{c:"France",ch:"Meta Ads",n:"MA_Lead_Form",s:9338,i:192483,cl:6892,m:464,d:110,r:158290,mr:26730},
+{c:"France",ch:"Meta Ads",n:"MA_Lookalike",s:5736,i:182874,cl:4323,m:265,d:75,r:82275,mr:11778},
+{c:"France",ch:"Meta Ads",n:"MA_Retargeting",s:7287,i:157512,cl:4830,m:367,d:109,r:114777,mr:18627},
+{c:"France",ch:"LinkedIn Ads",n:"LI_Tradespeople_Campaign",s:4108,i:341999,cl:12080,m:1013,d:172,r:173204,mr:37344},
+{c:"France",ch:"LinkedIn Ads",n:"LI_Construction_Leads",s:7295,i:371184,cl:13244,m:773,d:102,r:124542,mr:18958},
+{c:"France",ch:"Organic Search",n:"SEO_Blog",s:9445,i:229426,cl:5710,m:822,d:242,r:275154,mr:42451},
+{c:"France",ch:"Organic Search",n:"SEO_Landing_Pages",s:1956,i:162296,cl:2765,m:143,d:28,r:36484,mr:5027},
+{c:"France",ch:"Referral",n:"Partner_Program_A",s:2218,i:136416,cl:3045,m:317,d:63,r:79947,mr:11482},
+{c:"France",ch:"Referral",n:"Partner_Program_B",s:7893,i:166381,cl:8139,m:726,d:202,r:218564,mr:47443}
+];
+const TM={'GA_Search_Brand':'Brand','GA_Search_Generic':'Non-Brand Search','GA_Display_Retargeting':'Retargeting','MA_Lead_Form':'Lead Generation','MA_Lookalike':'Prospecting','MA_Retargeting':'Retargeting','LI_Tradespeople_Campaign':'Industry Targeting','LI_Construction_Leads':'Industry Targeting','SEO_Blog':'Content','SEO_Landing_Pages':'Content','Partner_Program_A':'Referral','Partner_Program_B':'Referral'};
+const TR={Germany:{GA_Search_Brand:'Bayern',GA_Search_Generic:'NRW',GA_Display_Retargeting:'Berlin-Brandenburg',MA_Lead_Form:'Bayern',MA_Lookalike:'NRW',MA_Retargeting:'Berlin-Brandenburg',LI_Tradespeople_Campaign:'Bayern',LI_Construction_Leads:'NRW',SEO_Blog:'Bayern',SEO_Landing_Pages:'NRW',Partner_Program_A:'Berlin-Brandenburg',Partner_Program_B:'NRW'},Austria:{GA_Search_Brand:'Wien',GA_Search_Generic:'Westösterreich',GA_Display_Retargeting:'Wien',MA_Lead_Form:'Wien',MA_Lookalike:'Westösterreich',MA_Retargeting:'Westösterreich',LI_Tradespeople_Campaign:'Wien',LI_Construction_Leads:'Westösterreich',SEO_Blog:'Wien',SEO_Landing_Pages:'Westösterreich',Partner_Program_A:'Wien',Partner_Program_B:'Westösterreich'},France:{GA_Search_Brand:'Île-de-France',GA_Search_Generic:'Sud-Est',GA_Display_Retargeting:'Île-de-France',MA_Lead_Form:'Île-de-France',MA_Lookalike:'Sud-Est',MA_Retargeting:'Sud-Est',LI_Tradespeople_Campaign:'Île-de-France',LI_Construction_Leads:'Sud-Est',SEO_Blog:'Île-de-France',SEO_Landing_Pages:'Sud-Est',Partner_Program_A:'Île-de-France',Partner_Program_B:'Sud-Est'}};
+const LF={'GA_Search_Brand':.82,'GA_Search_Generic':.88,'GA_Display_Retargeting':.90,'MA_Lead_Form':.85,'MA_Lookalike':.92,'MA_Retargeting':.87,'LI_Tradespeople_Campaign':.96,'LI_Construction_Leads':.93,'SEO_Blog':.75,'SEO_Landing_Pages':.80,'Partner_Program_A':.90,'Partner_Program_B':.88};
+const TF={'GA_Search_Brand':1.03,'GA_Search_Generic':1.08,'GA_Display_Retargeting':1.15,'MA_Lead_Form':1.10,'MA_Lookalike':1.12,'MA_Retargeting':.97,'LI_Tradespeople_Campaign':1.22,'LI_Construction_Leads':1.06,'SEO_Blog':.90,'SEO_Landing_Pages':.94,'Partner_Program_A':1.18,'Partner_Program_B':1.04};
+const CC={'Google Ads':'#4285F4','Meta Ads':'#E1306C','LinkedIn Ads':'#0A66C2','Organic Search':'#16a34a','Referral':'#8B5CF6'};
+const CO=['Google Ads','Meta Ads','LinkedIn Ads','Organic Search','Referral'];
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MW=[.065,.070,.085,.090,.095,.090,.075,.070,.095,.095,.090,.080];
+
+function sr(s,i){let h=0;const x=s+'_'+i;for(let j=0;j<x.length;j++){h=((h<<5)-h)+x.charCodeAt(j);h|=0;}return(Math.abs(h)%1000)/1000;}
+function tm(a,n){const raw=MW.map((w,i)=>w*(.85+sr(n,i)*.3));const t=raw.reduce((s,v)=>s+v,0);return raw.map(v=>Math.round(a*v/t));}
+
+const D=[],MD=[];
+R.forEach(r=>{
+  const lf=LF[r.n]||.85,tf=TF[r.n]||1.05;
+  const b={country:r.c,channel:r.ch,campaign:r.n,campaignType:TM[r.n]||'Other',territory:(TR[r.c]||{})[r.n]||'Other',
+    spend:r.s,impressions:r.i,clicks:r.cl,mqls:r.m,deals:r.d,revenue:r.r,mrr:r.mr,
+    spend_ly:Math.round(r.s*lf),impressions_ly:Math.round(r.i*lf),clicks_ly:Math.round(r.cl*lf),
+    mqls_ly:Math.round(r.m*lf),deals_ly:Math.round(r.d*lf),revenue_ly:Math.round(r.r*lf),mrr_ly:Math.round(r.mr*lf),
+    spend_tgt:Math.round(r.s*tf),impressions_tgt:Math.round(r.i*tf),mqls_tgt:Math.round(r.m*tf),
+    deals_tgt:Math.round(r.d*tf),revenue_tgt:Math.round(r.r*tf),mrr_tgt:Math.round(r.mr*tf)};
+  D.push(b);
+  const keys=['spend','impressions','clicks','mqls','deals','revenue','mrr'];
+  const lyKeys=keys.map(k=>k+'_ly');
+  const tgtKeys=['spend_tgt','impressions_tgt','mqls_tgt','deals_tgt','revenue_tgt','mrr_tgt'];
+  const mVals={},mLy={},mTgt={};
+  keys.forEach(k=>mVals[k]=tm(b[k],r.n+k));
+  lyKeys.forEach(k=>mLy[k]=tm(b[k],r.n+k));
+  tgtKeys.forEach(k=>mTgt[k]=tm(b[k],r.n+k));
+  for(let mo=0;mo<12;mo++){
+    const row={country:b.country,channel:b.channel,campaign:b.campaign,campaignType:b.campaignType,territory:b.territory,month:mo,monthName:MN[mo]};
+    keys.forEach(k=>row[k]=mVals[k][mo]);
+    lyKeys.forEach(k=>row[k]=mLy[k][mo]);
+    tgtKeys.forEach(k=>row[k]=mTgt[k][mo]);
+    MD.push(row);
+  }
+});
+
+// ================================================================
+// FILTERS & TABS
+// ================================================================
+let F={p:'fy',c:'all',t:'all',ch:'all',ty:'all'};
+let AT='summary';
+const CH={};
+function gf(){const s=F.p==='fy'?D:MD.filter(r=>r.month===+F.p);return s.filter(r=>(F.c==='all'||r.country===F.c)&&(F.t==='all'||r.territory===F.t)&&(F.ch==='all'||r.channel===F.ch)&&(F.ty==='all'||r.campaignType===F.ty));}
+function gfm(){return MD.filter(r=>(F.c==='all'||r.country===F.c)&&(F.t==='all'||r.territory===F.t)&&(F.ch==='all'||r.channel===F.ch)&&(F.ty==='all'||r.campaignType===F.ty));}
+function pf(){
+  const el=(id,opts,lbl)=>{const e=document.getElementById(id);const v=e.value;e.innerHTML=`<option value="all">${lbl}</option>`+opts.map(o=>`<option value="${o}"${o===v?' selected':''}>${o}</option>`).join('');};
+  document.getElementById('fP').innerHTML='<option value="fy">Full Year</option>'+MN.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  el('fC',[...new Set(D.map(r=>r.country))].sort(),'All Countries');
+  el('fCh',CO.filter(c=>D.some(r=>r.channel===c)),'All Channels');
+  el('fTy',[...new Set(D.map(r=>r.campaignType))].sort(),'All Types');
+  const ts=F.c!=='all'?D.filter(r=>r.country===F.c):D;
+  el('fT',[...new Set(ts.map(r=>r.territory))].sort(),'All Territories');
+}
+function ofc(){F.p=document.getElementById('fP').value;F.c=document.getElementById('fC').value;F.t=document.getElementById('fT').value;F.ch=document.getElementById('fCh').value;F.ty=document.getElementById('fTy').value;pf();renderAll();}
+function resetF(){F={p:'fy',c:'all',t:'all',ch:'all',ty:'all'};pf();renderAll();}
+['fP','fC','fT','fCh','fTy'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{if(id==='fC')F.t='all';ofc();}));
+
+document.getElementById('tabBar').addEventListener('click',e=>{
+  const btn=e.target.closest('.tab-btn');if(!btn)return;
+  AT=btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.toggle('active',el.id==='t-'+AT));
+  renderAll();
+});
+
+// ================================================================
+// UTILITIES
+// ================================================================
+const fm={e:v=>'€'+(Math.abs(v)>=1e6?(v/1e6).toFixed(1)+'M':Math.abs(v)>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v)),ef:v=>'€'+Math.round(v).toLocaleString('de-DE'),n:v=>Math.abs(v)>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v),p:v=>v.toFixed(1)+'%',d:v=>(v>=0?'+':'')+v.toFixed(1)+'%',pp:v=>(v>=0?'+':'')+v.toFixed(1)+'pp'};
+function S(a,k){return a.reduce((s,r)=>s+(r[k]||0),0);}
+function yoy(c,l){return l>0?((c-l)/l)*100:0;}
+function att(a,t){return t>0?(a/t)*100:0;}
+function tc(v,inv){if(inv)return v<=-2?'up':v>=2?'dn':'fl';return v>=2?'up':v<=-2?'dn':'fl';}
+function tl(a){return a>=98?'g':a>=90?'y':'r';}
+function tlc(a){return a>=98?'hit':a>=90?'close':'miss';}
+function mc(id,cfg){if(CH[id])CH[id].destroy();CH[id]=new Chart(document.getElementById(id),cfg);}
+function byCh(fd){const o={};fd.forEach(r=>{if(!o[r.channel])o[r.channel]=[];o[r.channel].push(r);});return o;}
+
+// ================================================================
+// TAB 1: MANAGEMENT SUMMARY
+// ================================================================
+function renderSummary(fd){
+  const t={s:S(fd,'spend'),sl:S(fd,'spend_ly'),st:S(fd,'spend_tgt'),i:S(fd,'impressions'),il:S(fd,'impressions_ly'),
+    m:S(fd,'mqls'),ml:S(fd,'mqls_ly'),mt:S(fd,'mqls_tgt'),d:S(fd,'deals'),dl:S(fd,'deals_ly'),dt:S(fd,'deals_tgt'),
+    r:S(fd,'revenue'),rl:S(fd,'revenue_ly'),rt:S(fd,'revenue_tgt'),mr:S(fd,'mrr'),mrl:S(fd,'mrr_ly'),mrt:S(fd,'mrr_tgt')};
+  const cac=t.d>0?t.s/t.d:0,cacl=t.dl>0?t.sl/t.dl:0,cact=t.dt>0?t.st/t.dt:0;
+  const roas=t.s>0?t.r/t.s:0,roasl=t.sl>0?t.rl/t.sl:0;
+
+  const cards=[
+    {l:'Total Spend',v:fm.e(t.s),y:yoy(t.s,t.sl),a:att(t.s,t.st),inv:true},
+    {l:'Impressions',v:fm.n(t.i),y:yoy(t.i,t.il),a:100},
+    {l:'MQLs',v:fm.n(t.m),y:yoy(t.m,t.ml),a:att(t.m,t.mt)},
+    {l:'Deals Won',v:fm.n(t.d),y:yoy(t.d,t.dl),a:att(t.d,t.dt)},
+    {l:'Revenue',v:fm.e(t.r),y:yoy(t.r,t.rl),a:att(t.r,t.rt)},
+    {l:'Net MRR',v:fm.e(t.mr),y:yoy(t.mr,t.mrl),a:att(t.mr,t.mrt)},
+    {l:'ROAS',v:roas.toFixed(1)+'x',y:yoy(roas,roasl),a:100}
+  ];
+  document.getElementById('kpiRow').innerHTML=cards.map(c=>{
+    const cls=tc(c.y,c.inv),ar=cls==='up'?'↑':cls==='dn'?'↓':'→';
+    return`<div class="kpi ${tl(c.l==='Impressions'||c.l==='ROAS'?100:c.inv?c.a:c.a)}"><div class="kpi-l">${c.l}</div><div class="kpi-v">${c.v}</div><div class="kpi-m"><span class="tag ${cls}">${ar} ${fm.d(c.y)} vs LY</span>${c.l!=='Impressions'&&c.l!=='ROAS'?`<span class="tgt ${tlc(c.a)}">${Math.round(c.a)}% of target</span>`:''}</div></div>`;
+  }).join('');
+
+  // INSIGHTS
+  const bc=byCh(fd);const chs=CO.filter(c=>bc[c]);
+  const chStats=chs.map(ch=>{const d=bc[ch];const sp=S(d,'spend'),mq=S(d,'mqls'),dw=S(d,'deals'),rv=S(d,'revenue'),rvl=S(d,'revenue_ly'),mr=S(d,'mrr'),mrl=S(d,'mrr_ly'),spl=S(d,'spend_ly');
+    const r=sp>0?rv/sp:0,rl=spl>0?rvl/spl:0,cac=dw>0?sp/dw:0,cacl=S(d,'deals_ly')>0?spl/S(d,'deals_ly'):0,mrd=dw>0?mr/dw:0;
+    return{ch,sp,mq,dw,rv,rvl,mr,mrl,roas:r,roasl:rl,cac,cacl,mrd,roasYoy:yoy(r,rl),cacYoy:yoy(cac,cacl),mrrYoy:yoy(mr,mrl),revShare:t.r>0?rv/t.r*100:0,spendShare:t.s>0?sp/t.s*100:0};
+  }).sort((a,b)=>b.roas-a.roas);
+
+  // Find best/worst
+  const best=chStats[0],worst=chStats[chStats.length-1];
+  const risingMrr=[...chStats].sort((a,b)=>b.mrrYoy-a.mrrYoy)[0];
+  const risingCac=[...chStats].sort((a,b)=>b.cacYoy-a.cacYoy)[0];
+  const biggestGap=chStats.find(c=>c.revShare>c.spendShare+5);
+  const overSpend=chStats.find(c=>c.spendShare>c.revShare+5);
+
+  // Campaign level insights
+  const campStats=fd.map(r=>{const roas=r.spend>0?r.revenue/r.spend:0;const cac=r.deals>0?r.spend/r.deals:0;return{...r,roas,cac};}).sort((a,b)=>b.roas-a.roas);
+
+  let ins=`<div class="insight-card"><h4><span class="dot" style="background:var(--green)"></span> Top Performers &amp; Opportunities</h4>`;
+  ins+=`<div class="insight-item"><strong>${best.ch}</strong> delivers the highest ROAS at <span class="metric up">${best.roas.toFixed(1)}x</span> — earning €${(best.roas).toFixed(0)} for every €1 spent</div>`;
+  if(biggestGap)ins+=`<div class="insight-item"><strong>${biggestGap.ch}</strong> generates <span class="metric">${biggestGap.revShare.toFixed(0)}%</span> of revenue with only <span class="metric">${biggestGap.spendShare.toFixed(0)}%</span> of budget — <strong class="up">opportunity to scale</strong></div>`;
+  ins+=`<div class="insight-item"><strong>${risingMrr.ch}</strong> shows strongest MRR growth at <span class="metric up">${fm.d(risingMrr.mrrYoy)}</span> YoY — building sustainable recurring revenue</div>`;
+  if(campStats[0])ins+=`<div class="insight-item">Best campaign: <strong>${campStats[0].campaign}</strong> (${campStats[0].country}) with <span class="metric">${campStats[0].roas.toFixed(0)}x ROAS</span></div>`;
+  ins+=`</div>`;
+
+  ins+=`<div class="insight-card"><h4><span class="dot" style="background:var(--red)"></span> Risks &amp; Action Items</h4>`;
+  ins+=`<div class="insight-item"><strong>${worst.ch}</strong> has the lowest ROAS at <span class="metric dn">${worst.roas.toFixed(1)}x</span> — review budget allocation and targeting</div>`;
+  if(risingCac.cacYoy>5)ins+=`<div class="insight-item"><strong>${risingCac.ch}</strong> CAC increased <span class="metric dn">${fm.d(risingCac.cacYoy)}</span> YoY to €${risingCac.cac.toFixed(0)} — acquisition getting more expensive</div>`;
+  if(overSpend)ins+=`<div class="insight-item"><strong>${overSpend.ch}</strong> consumes <span class="metric">${overSpend.spendShare.toFixed(0)}%</span> of budget but only delivers <span class="metric">${overSpend.revShare.toFixed(0)}%</span> of revenue — <strong class="dn">consider reallocation</strong></div>`;
+  const worstCamp=campStats[campStats.length-1];
+  if(worstCamp)ins+=`<div class="insight-item">Weakest campaign: <strong>${worstCamp.campaign}</strong> (${worstCamp.country}) at <span class="metric dn">${worstCamp.roas.toFixed(1)}x ROAS</span>, €${worstCamp.cac.toFixed(0)} CAC</div>`;
+  ins+=`</div>`;
+  document.getElementById('insightsGrid').innerHTML=ins;
+
+  // Trend charts
+  const md=gfm();const byM=Array.from({length:12},(_,i)=>md.filter(r=>r.month===i));
+  const lOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>fm.e(v)},grid:{color:'#f1f5f920'}},x:{grid:{display:false}}}};
+  mc('c_revTrend',{type:'line',data:{labels:MN,datasets:[
+    {label:'FY24',data:byM.map(m=>S(m,'revenue')),borderColor:'var(--blue)',backgroundColor:'rgba(59,130,246,.1)',fill:true,tension:.3,pointRadius:3},
+    {label:'FY23',data:byM.map(m=>S(m,'revenue_ly')),borderColor:'#94a3b8',borderDash:[5,5],tension:.3,pointRadius:2},
+    {label:'Target',data:byM.map(m=>S(m,'revenue_tgt')),borderColor:'var(--amber)',borderDash:[3,3],tension:.3,pointRadius:0}
+  ]},options:lOpts});
+  mc('c_mrrTrend',{type:'line',data:{labels:MN,datasets:[
+    {label:'FY24 MRR',data:byM.map(m=>S(m,'mrr')),borderColor:'var(--green)',backgroundColor:'rgba(34,197,94,.1)',fill:true,tension:.3,pointRadius:3},
+    {label:'FY23 MRR',data:byM.map(m=>S(m,'mrr_ly')),borderColor:'#94a3b8',borderDash:[5,5],tension:.3,pointRadius:2}
+  ]},options:lOpts});
+
+  // HEATMAP
+  const countries=[...new Set(fd.map(r=>r.country))].sort();
+  let hm=`<thead><tr><th></th>${chs.map(c=>`<th style="text-align:center"><span class="dot" style="background:${CC[c]}"></span>${c}</th>`).join('')}<th style="text-align:center"><strong>Total</strong></th></tr></thead><tbody>`;
+  countries.forEach(co=>{
+    const coD=fd.filter(r=>r.country===co);
+    hm+=`<tr><td><strong>${co}</strong></td>`;
+    chs.forEach(ch=>{
+      const d=coD.filter(r=>r.channel===ch);
+      const sp=S(d,'spend'),rv=S(d,'revenue');
+      const roas=sp>0?rv/sp:0;
+      const bg=roas>=20?'#dcfce7':roas>=10?'#fef9c3':roas>=5?'#fed7aa':'#fecaca';
+      const color=roas>=10?'#16a34a':roas>=5?'#92400e':'#dc2626';
+      hm+=`<td><span class="hm-cell" style="background:${bg};color:${color}">${roas>0?roas.toFixed(1)+'x':'—'}</span></td>`;
+    });
+    const totSp=S(coD,'spend'),totRv=S(coD,'revenue');
+    const totR=totSp>0?totRv/totSp:0;
+    hm+=`<td style="text-align:center"><strong>${totR.toFixed(1)}x</strong></td></tr>`;
+  });
+  // Total row
+  hm+=`<tr class="tot"><td><strong>Total</strong></td>`;
+  chs.forEach(ch=>{const d=fd.filter(r=>r.channel===ch);const sp=S(d,'spend'),rv=S(d,'revenue');const r=sp>0?rv/sp:0;hm+=`<td style="text-align:center"><strong>${r.toFixed(1)}x</strong></td>`;});
+  const gr=t.s>0?t.r/t.s:0;hm+=`<td style="text-align:center"><strong>${gr.toFixed(1)}x</strong></td></tr></tbody>`;
+  document.getElementById('heatmap').innerHTML=hm;
+}
+
+// ================================================================
+// TAB 2: CHANNEL PERFORMANCE
+// ================================================================
+function renderChannels(fd){
+  const bc=byCh(fd);const chs=CO.filter(c=>bc[c]);
+
+  mc('c_impr',{type:'bar',data:{labels:chs,datasets:[
+    {label:'FY24',data:chs.map(c=>S(bc[c],'impressions')),backgroundColor:chs.map(c=>CC[c]),borderRadius:6,barPercentage:.6},
+    {label:'FY23',data:chs.map(c=>S(bc[c],'impressions_ly')),backgroundColor:chs.map(c=>CC[c]+'44'),borderRadius:6,barPercentage:.6}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>fm.n(v)},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+
+  const cpmTY=chs.map(c=>{const i=S(bc[c],'impressions');return i>0?S(bc[c],'spend')/i*1000:0;});
+  const cpmLY=chs.map(c=>{const i=S(bc[c],'impressions_ly');return i>0?S(bc[c],'spend_ly')/i*1000:0;});
+  mc('c_cpm',{type:'bar',data:{labels:chs,datasets:[
+    {label:'FY24 CPM',data:cpmTY,backgroundColor:chs.map(c=>CC[c]),borderRadius:6,barPercentage:.6},
+    {label:'FY23 CPM',data:cpmLY,backgroundColor:chs.map(c=>CC[c]+'44'),borderRadius:6,barPercentage:.6}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>'€'+v.toFixed(1)},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+
+  // Conversion table
+  let h=`<thead><tr><th>Channel</th><th class="tr">Impressions</th><th class="tr">vs LY</th><th class="tr sep">CPM €</th><th class="tr">vs LY</th><th class="tr sep">CTR %</th><th class="tr">vs LY</th><th class="tr sep">Click→MQL %</th><th class="tr">vs LY</th><th class="tr sep">MQL→Deal %</th><th class="tr">vs LY</th><th class="tr sep">CPL €</th><th class="tr">vs LY</th><th class="tr sep">CAC €</th><th class="tr">vs LY</th></tr></thead><tbody>`;
+  let ti=0,til=0,ts=0,tsl=0,tcl=0,tcll=0,tm=0,tml=0,td=0,tdl=0;
+  chs.forEach(ch=>{
+    const d=bc[ch],im=S(d,'impressions'),il=S(d,'impressions_ly'),sp=S(d,'spend'),sl=S(d,'spend_ly'),cl=S(d,'clicks'),cll=S(d,'clicks_ly'),mq=S(d,'mqls'),ml=S(d,'mqls_ly'),dw=S(d,'deals'),dl=S(d,'deals_ly');
+    ti+=im;til+=il;ts+=sp;tsl+=sl;tcl+=cl;tcll+=cll;tm+=mq;tml+=ml;td+=dw;tdl+=dl;
+    const cpm=im>0?sp/im*1000:0,cpml=il>0?sl/il*1000:0,ctr=im>0?cl/im*100:0,ctrl=il>0?cll/il*100:0;
+    const cr=cl>0?mq/cl*100:0,crl=cll>0?ml/cll*100:0,cvr=mq>0?dw/mq*100:0,cvrl=ml>0?dl/ml*100:0;
+    const cpl=mq>0?sp/mq:0,cpll=ml>0?sl/ml:0,cac=dw>0?sp/dw:0,cacl=dl>0?sl/dl:0;
+    h+=`<tr><td><span class="dot" style="background:${CC[ch]}"></span>${ch}</td>
+      <td class="tr">${fm.n(im)}</td><td class="tr"><span class="${tc(yoy(im,il))}">${fm.d(yoy(im,il))}</span></td>
+      <td class="tr sep">€${cpm.toFixed(1)}</td><td class="tr"><span class="${tc(yoy(cpm,cpml),1)}">${fm.d(yoy(cpm,cpml))}</span></td>
+      <td class="tr sep">${fm.p(ctr)}</td><td class="tr"><span class="${tc(ctr-ctrl)}">${fm.pp(ctr-ctrl)}</span></td>
+      <td class="tr sep">${fm.p(cr)}</td><td class="tr"><span class="${tc(cr-crl)}">${fm.pp(cr-crl)}</span></td>
+      <td class="tr sep">${fm.p(cvr)}</td><td class="tr"><span class="${tc(cvr-cvrl)}">${fm.pp(cvr-cvrl)}</span></td>
+      <td class="tr sep">€${cpl.toFixed(0)}</td><td class="tr"><span class="${tc(yoy(cpl,cpll),1)}">${fm.d(yoy(cpl,cpll))}</span></td>
+      <td class="tr sep">€${cac.toFixed(0)}</td><td class="tr"><span class="${tc(yoy(cac,cacl),1)}">${fm.d(yoy(cac,cacl))}</span></td></tr>`;
+  });
+  // Total
+  const tCpm=ti>0?ts/ti*1000:0,tCpml=til>0?tsl/til*1000:0,tCtr=ti>0?tcl/ti*100:0,tCtrl=til>0?tcll/til*100:0;
+  const tCr=tcl>0?tm/tcl*100:0,tCrl=tcll>0?tml/tcll*100:0,tCvr=tm>0?td/tm*100:0,tCvrl=tml>0?tdl/tml*100:0;
+  const tCpl=tm>0?ts/tm:0,tCpll=tml>0?tsl/tml:0,tCac=td>0?ts/td:0,tCacl=tdl>0?tsl/tdl:0;
+  h+=`<tr class="tot"><td>Total</td><td class="tr">${fm.n(ti)}</td><td class="tr"><span class="${tc(yoy(ti,til))}">${fm.d(yoy(ti,til))}</span></td><td class="tr sep">€${tCpm.toFixed(1)}</td><td class="tr"><span class="${tc(yoy(tCpm,tCpml),1)}">${fm.d(yoy(tCpm,tCpml))}</span></td><td class="tr sep">${fm.p(tCtr)}</td><td class="tr"><span class="${tc(tCtr-tCtrl)}">${fm.pp(tCtr-tCtrl)}</span></td><td class="tr sep">${fm.p(tCr)}</td><td class="tr"><span class="${tc(tCr-tCrl)}">${fm.pp(tCr-tCrl)}</span></td><td class="tr sep">${fm.p(tCvr)}</td><td class="tr"><span class="${tc(tCvr-tCvrl)}">${fm.pp(tCvr-tCvrl)}</span></td><td class="tr sep">€${tCpl.toFixed(0)}</td><td class="tr"><span class="${tc(yoy(tCpl,tCpll),1)}">${fm.d(yoy(tCpl,tCpll))}</span></td><td class="tr sep">€${tCac.toFixed(0)}</td><td class="tr"><span class="${tc(yoy(tCac,tCacl),1)}">${fm.d(yoy(tCac,tCacl))}</span></td></tr></tbody>`;
+  document.getElementById('tConv').innerHTML=h;
+
+  // Efficiency
+  const ds=chs.map(ch=>{const d=bc[ch];const sp=S(d,'spend'),mq=S(d,'mqls'),dw=S(d,'deals'),rv=S(d,'revenue');
+    return{label:ch,data:[{x:mq>0?sp/mq:0,y:mq>0?dw/mq*100:0,r:Math.max(8,Math.sqrt(rv/5000))}],backgroundColor:CC[ch]+'99',borderColor:CC[ch],borderWidth:2};});
+  mc('c_eff',{type:'bubble',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: CPL €${ctx.raw.x.toFixed(0)}, CVR ${ctx.raw.y.toFixed(1)}%`}}},scales:{x:{title:{display:true,text:'CPL € (lower = better)',font:{size:10,weight:'600'}},grid:{color:'#f1f5f9'}},y:{title:{display:true,text:'MQL→Deal CVR % (higher = better)',font:{size:10,weight:'600'}},grid:{color:'#f1f5f9'}}}}});
+
+  // ROAS
+  const roas=chs.map(c=>{const sp=S(bc[c],'spend'),rv=S(bc[c],'revenue');return sp>0?rv/sp:0;});
+  const roasL=chs.map(c=>{const sp=S(bc[c],'spend_ly'),rv=S(bc[c],'revenue_ly');return sp>0?rv/sp:0;});
+  mc('c_roas',{type:'bar',data:{labels:chs,datasets:[
+    {label:'FY24',data:roas,backgroundColor:chs.map(c=>CC[c]),borderRadius:6,barPercentage:.6},
+    {label:'FY23',data:roasL,backgroundColor:chs.map(c=>CC[c]+'44'),borderRadius:6,barPercentage:.6}
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{x:{title:{display:true,text:'ROAS (x)'},grid:{color:'#f1f5f9'}},y:{grid:{display:false}}}}});
+
+  // Full channel table
+  let ht=`<thead><tr><th>Channel</th><th class="tr">Spend</th><th class="tr">MQLs</th><th class="tr">vs LY</th><th class="tr">vs Tgt</th><th class="tr sep">Deals</th><th class="tr">vs LY</th><th class="tr">CVR%</th><th class="tr sep">Revenue</th><th class="tr">vs LY</th><th class="tr">vs Tgt</th><th class="tr sep">MRR</th><th class="tr">MRR/Deal</th><th class="tr sep">CAC</th><th class="tr">ROAS</th></tr></thead><tbody>`;
+  chs.forEach(ch=>{const d=bc[ch];const sp=S(d,'spend'),mq=S(d,'mqls'),ml=S(d,'mqls_ly'),mt=S(d,'mqls_tgt'),dw=S(d,'deals'),dl=S(d,'deals_ly'),rv=S(d,'revenue'),rl=S(d,'revenue_ly'),rt=S(d,'revenue_tgt'),mr=S(d,'mrr');
+    const cac=dw>0?sp/dw:0,cvr=mq>0?dw/mq*100:0,ro=sp>0?rv/sp:0,mrd=dw>0?mr/dw:0;
+    ht+=`<tr><td><span class="dot" style="background:${CC[ch]}"></span>${ch}</td><td class="tr">${fm.e(sp)}</td><td class="tr"><strong>${fm.n(mq)}</strong></td><td class="tr"><span class="${tc(yoy(mq,ml))}">${fm.d(yoy(mq,ml))}</span></td><td class="tr"><span class="${tlc(att(mq,mt))}">${Math.round(att(mq,mt))}%</span></td><td class="tr sep">${fm.n(dw)}</td><td class="tr"><span class="${tc(yoy(dw,dl))}">${fm.d(yoy(dw,dl))}</span></td><td class="tr">${fm.p(cvr)}</td><td class="tr sep"><strong>${fm.e(rv)}</strong></td><td class="tr"><span class="${tc(yoy(rv,rl))}">${fm.d(yoy(rv,rl))}</span></td><td class="tr"><span class="${tlc(att(rv,rt))}">${Math.round(att(rv,rt))}%</span></td><td class="tr sep">${fm.e(mr)}</td><td class="tr">€${mrd.toFixed(0)}</td><td class="tr sep">€${cac.toFixed(0)}</td><td class="tr"><strong>${ro.toFixed(1)}x</strong></td></tr>`;});
+  ht+='</tbody>';document.getElementById('tChan').innerHTML=ht;
+}
+
+// ================================================================
+// TAB 3: CAMPAIGN OPERATIONS
+// ================================================================
+let sK='revenue',sD=-1;
+function renderCampaigns(fd){
+  const bc=byCh(fd);const chs=CO.filter(c=>bc[c]);
+
+  // MRR Bridge
+  const base=S(fd,'mrr_ly')*.85,churn=S(fd,'mrr_ly')*.10;
+  const lbl=['Base MRR',...chs.map(c=>'+ '+c),'- Churn','Ending'];
+  const vals=[base,...chs.map(c=>S(bc[c],'mrr')),-churn];
+  const end=vals.reduce((a,v)=>a+v,0);
+  const bars=[];let run=0;vals.forEach(v=>{const st=run;run+=v;bars.push([Math.min(st,run),Math.max(st,run)]);});bars.push([0,end]);
+  mc('c_mrrBridge',{type:'bar',data:{labels:lbl,datasets:[{data:bars,backgroundColor:['#3b82f6',...chs.map(c=>CC[c]),'#ef4444','#0f172a'],borderRadius:4,barPercentage:.7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fm.e(Math.abs(ctx.raw[1]-ctx.raw[0]))}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{ticks:{callback:v=>fm.e(v)},grid:{color:'#f1f5f9'}}}}});
+
+  // MRR/Deal + CAC Payback
+  const mrd=chs.map(c=>{const d=bc[c];return S(d,'deals')>0?S(d,'mrr')/S(d,'deals'):0;});
+  const payback=chs.map((c,i)=>{const d=bc[c];const cac=S(d,'deals')>0?S(d,'spend')/S(d,'deals'):0;return mrd[i]>0?cac/mrd[i]:0;});
+  mc('c_mrrDeal',{type:'bar',data:{labels:chs,datasets:[
+    {label:'MRR/Deal (€)',data:mrd,backgroundColor:chs.map(c=>CC[c]),borderRadius:6,barPercentage:.5,yAxisID:'y'},
+    {label:'CAC Payback (months)',data:payback,type:'line',borderColor:'#ef4444',backgroundColor:'#ef444433',tension:.3,pointRadius:4,yAxisID:'y1'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{position:'left',ticks:{callback:v=>'€'+v},grid:{color:'#f1f5f9'}},y1:{position:'right',ticks:{callback:v=>v.toFixed(1)+'m'},grid:{display:false}},x:{grid:{display:false}}}}});
+
+  // Campaign Type
+  const byT={};fd.forEach(r=>{if(!byT[r.campaignType])byT[r.campaignType]=[];byT[r.campaignType].push(r);});
+  let ht=`<thead><tr><th>Type</th><th class="tr">Spend</th><th class="tr">MQLs</th><th class="tr">Deals</th><th class="tr">CVR%</th><th class="tr sep">Revenue</th><th class="tr">vs LY</th><th class="tr sep">MRR</th><th class="tr">MRR/Deal</th><th class="tr sep">CAC</th><th class="tr">Payback</th><th class="tr">ROAS</th></tr></thead><tbody>`;
+  Object.keys(byT).sort().forEach(tp=>{
+    const d=byT[tp];const sp=S(d,'spend'),mq=S(d,'mqls'),dw=S(d,'deals'),rv=S(d,'revenue'),rl=S(d,'revenue_ly'),mr=S(d,'mrr');
+    const cvr=mq>0?dw/mq*100:0,cac=dw>0?sp/dw:0,ro=sp>0?rv/sp:0,mrdv=dw>0?mr/dw:0,pb=mrdv>0?cac/mrdv:0;
+    ht+=`<tr><td><strong>${tp}</strong></td><td class="tr">${fm.e(sp)}</td><td class="tr">${fm.n(mq)}</td><td class="tr">${fm.n(dw)}</td><td class="tr">${fm.p(cvr)}</td><td class="tr sep"><strong>${fm.e(rv)}</strong></td><td class="tr"><span class="${tc(yoy(rv,rl))}">${fm.d(yoy(rv,rl))}</span></td><td class="tr sep">${fm.e(mr)}</td><td class="tr">€${mrdv.toFixed(0)}</td><td class="tr sep">€${cac.toFixed(0)}</td><td class="tr">${pb.toFixed(1)}m</td><td class="tr"><strong>${ro.toFixed(1)}x</strong></td></tr>`;
+  });
+  ht+='</tbody>';document.getElementById('tType').innerHTML=ht;
+
+  // Detail table
+  const sorted=[...fd].sort((a,b)=>{const va=a[sK],vb=b[sK];return(typeof va==='string'?va.localeCompare(vb):(va-vb))*sD;});
+  let dt=`<thead><tr><th onclick="srt('country')">Country</th><th onclick="srt('territory')">Territory</th><th onclick="srt('channel')">Channel</th><th onclick="srt('campaign')">Campaign</th><th onclick="srt('campaignType')">Type</th><th class="tr" onclick="srt('spend')">Spend</th><th class="tr" onclick="srt('impressions')">Impr.</th><th class="tr" onclick="srt('mqls')">MQLs</th><th class="tr" onclick="srt('deals')">Deals</th><th class="tr" onclick="srt('revenue')">Revenue</th><th class="tr" onclick="srt('mrr')">MRR</th><th class="tr">CAC</th><th class="tr">ROAS</th></tr></thead><tbody>`;
+  sorted.forEach(r=>{
+    const cvr=r.mqls>0?r.deals/r.mqls*100:0,cac=r.deals>0?r.spend/r.deals:0,roas=r.spend>0?r.revenue/r.spend:0,my=yoy(r.mrr,r.mrr_ly);
+    dt+=`<tr><td>${r.country}</td><td>${r.territory}</td><td><span class="dot" style="background:${CC[r.channel]}"></span>${r.channel}</td><td><strong>${r.campaign}</strong></td><td>${r.campaignType}</td><td class="tr">${fm.ef(r.spend)}</td><td class="tr">${fm.n(r.impressions)}</td><td class="tr">${r.mqls.toLocaleString()}</td><td class="tr">${r.deals}</td><td class="tr">${fm.ef(r.revenue)}</td><td class="tr">${fm.ef(r.mrr)} <span class="${tc(my)}" style="font-size:9px">${fm.d(my)}</span></td><td class="tr">€${cac.toFixed(0)}</td><td class="tr">${roas.toFixed(1)}x</td></tr>`;
+  });
+  dt+='</tbody>';document.getElementById('tDetail').innerHTML=dt;
+}
+function srt(k){if(sK===k)sD*=-1;else{sK=k;sD=typeof D[0][k]==='string'?1:-1;}renderCampaigns(gf());}
+
+// ================================================================
+// TAB 4: TRENDS & PACING
+// ================================================================
+function renderTrends(){
+  const md=gfm();const byM=Array.from({length:12},(_,i)=>md.filter(r=>r.month===i));
+  const mql=byM.map(m=>S(m,'mqls')),mqll=byM.map(m=>S(m,'mqls_ly'));
+  const deals=byM.map(m=>S(m,'deals')),dealsl=byM.map(m=>S(m,'deals_ly'));
+  const sp=byM.map(m=>S(m,'spend')),spl=byM.map(m=>S(m,'spend_ly'));
+  const cac=byM.map((m,i)=>deals[i]>0?sp[i]/deals[i]:0),cacl=byM.map((m,i)=>dealsl[i]>0?spl[i]/dealsl[i]:0);
+  const cvr=byM.map((m,i)=>mql[i]>0?deals[i]/mql[i]*100:0),cvrl=byM.map((m,i)=>mqll[i]>0?dealsl[i]/mqll[i]*100:0);
+
+  const lc=(l,d1,d2,c,fmt)=>({type:'line',data:{labels:MN,datasets:[{label:'FY24',data:d1,borderColor:c,backgroundColor:c+'22',fill:true,tension:.3,pointRadius:3},{label:'FY23',data:d2,borderColor:'#94a3b8',borderDash:[5,5],tension:.3,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:fmt||undefined},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+  mc('c_tMql',lc('MQLs',mql,mqll,'#3b82f6'));
+  mc('c_tDeals',lc('Deals',deals,dealsl,'#8b5cf6'));
+  mc('c_tCac',lc('CAC',cac,cacl,'#ef4444',v=>'€'+Math.round(v)));
+  mc('c_tCvr',lc('CVR',cvr,cvrl,'#16a34a',v=>v.toFixed(1)+'%'));
+
+  // Pacing table
+  const rev=byM.map(m=>S(m,'revenue')),revt=byM.map(m=>S(m,'revenue_tgt')),revl=byM.map(m=>S(m,'revenue_ly'));
+  const mrr=byM.map(m=>S(m,'mrr')),mqlt=byM.map(m=>S(m,'mqls_tgt')),dealst=byM.map(m=>S(m,'deals_tgt'));
+  let cm=0,cmt=0,cr=0,crt=0,cd=0,cdt=0;
+  let h=`<thead><tr><th>Month</th><th class="tr">MQLs</th><th class="tr">vs LY</th><th class="tr">Cum vs Tgt</th><th class="tr sep">Deals</th><th class="tr">vs LY</th><th class="tr">CVR%</th><th class="tr sep">Revenue</th><th class="tr">vs LY</th><th class="tr">Cum vs Tgt</th><th class="tr sep">MRR</th><th class="tr">CAC</th></tr></thead><tbody>`;
+  MN.forEach((mn,i)=>{
+    cm+=mql[i];cmt+=mqlt[i];cr+=rev[i];crt+=revt[i];cd+=deals[i];cdt+=dealst[i];
+    const my=yoy(mql[i],mqll[i]),dy=yoy(deals[i],dealsl[i]),ry=yoy(rev[i],revl[i]);
+    const mp=cmt>0?cm/cmt*100:0,rp=crt>0?cr/crt*100:0;
+    h+=`<tr><td><strong>${mn}</strong></td><td class="tr">${fm.n(mql[i])}</td><td class="tr"><span class="${tc(my)}">${fm.d(my)}</span></td><td class="tr"><span class="${tlc(mp)}">${Math.round(mp)}%</span></td><td class="tr sep">${deals[i]}</td><td class="tr"><span class="${tc(dy)}">${fm.d(dy)}</span></td><td class="tr">${fm.p(cvr[i])}</td><td class="tr sep">${fm.e(rev[i])}</td><td class="tr"><span class="${tc(ry)}">${fm.d(ry)}</span></td><td class="tr"><span class="${tlc(rp)}">${Math.round(rp)}%</span></td><td class="tr sep">${fm.e(mrr[i])}</td><td class="tr">€${cac[i].toFixed(0)}</td></tr>`;
+  });
+  h+=`<tr class="tot"><td>FY Total</td><td class="tr">${fm.n(cm)}</td><td class="tr"><span class="${tc(yoy(cm,mqll.reduce((a,v)=>a+v,0)))}">${fm.d(yoy(cm,mqll.reduce((a,v)=>a+v,0)))}</span></td><td class="tr"><span class="${tlc(cmt>0?cm/cmt*100:0)}">${Math.round(cmt>0?cm/cmt*100:0)}%</span></td><td class="tr sep">${fm.n(cd)}</td><td class="tr"><span class="${tc(yoy(cd,dealsl.reduce((a,v)=>a+v,0)))}">${fm.d(yoy(cd,dealsl.reduce((a,v)=>a+v,0)))}</span></td><td class="tr">${cm>0?fm.p(cd/cm*100):'-'}</td><td class="tr sep">${fm.e(cr)}</td><td class="tr"><span class="${tc(yoy(cr,revl.reduce((a,v)=>a+v,0)))}">${fm.d(yoy(cr,revl.reduce((a,v)=>a+v,0)))}</span></td><td class="tr"><span class="${tlc(crt>0?cr/crt*100:0)}">${Math.round(crt>0?cr/crt*100:0)}%</span></td><td class="tr sep">${fm.e(mrr.reduce((a,v)=>a+v,0))}</td><td class="tr">€${cd>0?Math.round(sp.reduce((a,v)=>a+v,0)/cd):'-'}</td></tr></tbody>`;
+  document.getElementById('tPace').innerHTML=h;
+}
+
+// ================================================================
+// RENDER + INIT
+// ================================================================
+function renderAll(){const fd=gf();if(AT==='summary')renderSummary(fd);if(AT==='channels')renderChannels(fd);if(AT==='campaigns')renderCampaigns(fd);if(AT==='trends')renderTrends();}
+pf();renderAll();
+</script>
+</body>
+</html>
