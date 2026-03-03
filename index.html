@@ -68,13 +68,16 @@ body{font-family:'Inter',sans-serif;background:var(--slate100);color:var(--slate
 .row.tri{grid-template-columns:1fr 1fr 1fr}
 .card{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200)}
 .card.wide{grid-column:1/-1}
-.card h3{font-size:12px;font-weight:700;margin-bottom:2px}.card .sub{font-size:10px;color:var(--slate500);margin-bottom:10px}
+.card h3{font-size:12px;font-weight:700;margin-bottom:2px}.card .sub{font-size:10px;color:var(--slate500);margin-bottom:4px}
+.formula{font-size:9px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;margin-bottom:10px;line-height:1.6}
+.formula code{font-family:'SF Mono',Monaco,monospace;background:#e5e7eb;padding:1px 4px;border-radius:3px;font-size:8.5px;color:#374151}
+.formula .note{display:block;margin-top:3px;font-style:italic;color:#9ca3af}
 .cw{position:relative;height:280px}
 .cw.tall{height:340px}
 
 /* Tables */
 .tc{background:#fff;border-radius:10px;padding:16px;border:1px solid var(--slate200);margin-bottom:16px;overflow-x:auto}
-.tc h3{font-size:12px;font-weight:700;margin-bottom:2px}.tc .sub{font-size:10px;color:var(--slate500);margin-bottom:10px}
+.tc h3{font-size:12px;font-weight:700;margin-bottom:2px}.tc .sub{font-size:10px;color:var(--slate500);margin-bottom:4px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th{text-align:left;padding:7px 8px;border-bottom:2px solid var(--slate200);font-weight:700;color:var(--slate500);text-transform:uppercase;letter-spacing:.3px;font-size:9px;white-space:nowrap;cursor:pointer;user-select:none}
 th:hover{color:var(--slate900)}
@@ -126,15 +129,24 @@ tr:hover td{background:var(--slate50)}
 
   <!-- TAB 1: MANAGEMENT SUMMARY -->
   <div id="t-summary" class="tab-content active">
+    <div class="formula">
+      <strong>KPI Scorecards</strong> — Each card shows the FY24 value, YoY change vs FY23 (<code>YoY% = (FY24 − FY23) ÷ FY23 × 100</code>), and target attainment (<code>Attainment% = Actual ÷ Target × 100</code>).
+      Traffic lights: <span style="color:#16a34a">●</span> ≥98% of target, <span style="color:#b45309">●</span> 90–98%, <span style="color:#dc2626">●</span> &lt;90%. For Spend, lower is better (inverted logic). ROAS = <code>Revenue ÷ Spend</code>.
+    </div>
     <div class="kpi-row" id="kpiRow"></div>
     <div class="insights-grid" id="insightsGrid"></div>
     <div class="row">
-      <div class="card"><h3>Monthly Revenue Trend</h3><div class="sub">FY24 actual vs FY23 vs FY24 target</div><div class="cw tall"><canvas id="c_revTrend"></canvas></div></div>
-      <div class="card"><h3>Monthly Net MRR Trend</h3><div class="sub">Recurring revenue growth trajectory</div><div class="cw tall"><canvas id="c_mrrTrend"></canvas></div></div>
+      <div class="card"><h3>Monthly Revenue Trend</h3><div class="sub">FY24 actual vs FY23 vs FY24 target</div>
+        <div class="formula">Total revenue from closed deals per month. Three lines: FY24 actual (blue), FY23 baseline (grey dashed), and FY24 target (amber dashed). Monthly distribution uses construction-industry seasonality weights (peak: Mar–Jun, Sep–Nov).<span class="note">Gap between blue and amber = over/underperformance vs plan.</span></div>
+        <div class="cw tall"><canvas id="c_revTrend"></canvas></div></div>
+      <div class="card"><h3>Monthly Net MRR Trend</h3><div class="sub">Recurring revenue growth trajectory</div>
+        <div class="formula"><code>Net MRR</code> = Monthly Recurring Revenue from won deals. Unlike one-time revenue, MRR represents the predictable, recurring portion of contract value — critical for SaaS valuation and growth forecasting.<span class="note">Upward trend = healthy compounding revenue base. Flat/declining = churn risk.</span></div>
+        <div class="cw tall"><canvas id="c_mrrTrend"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Country × Channel Performance Heatmap</h3>
       <div class="sub">ROAS by country and channel — green = high efficiency, red = needs attention</div>
+      <div class="formula"><code>ROAS = Revenue ÷ Spend</code> per country × channel combination. Color scale: <span style="color:#16a34a">■</span> ≥20x (excellent), <span style="color:#92400e">■</span> 10–20x (good), <span style="color:#b45309">■</span> 5–10x (acceptable), <span style="color:#dc2626">■</span> &lt;5x (needs review). Use this matrix to spot which markets and channels deliver the best return — and where budget reallocation may be needed.</div>
       <table class="heatmap" id="heatmap"></table>
     </div>
   </div>
@@ -142,21 +154,31 @@ tr:hover td{background:var(--slate50)}
   <!-- TAB 2: CHANNEL PERFORMANCE -->
   <div id="t-channels" class="tab-content">
     <div class="row">
-      <div class="card"><h3>Impressions by Channel</h3><div class="sub">Reach: FY24 vs FY23 — are we growing visibility?</div><div class="cw"><canvas id="c_impr"></canvas></div></div>
-      <div class="card"><h3>CPM by Channel (€)</h3><div class="sub">Cost per 1,000 impressions — buying efficiency</div><div class="cw"><canvas id="c_cpm"></canvas></div></div>
+      <div class="card"><h3>Impressions by Channel</h3><div class="sub">Reach: FY24 vs FY23 — are we growing visibility?</div>
+        <div class="formula"><code>Impressions</code> = number of times an ad or content was displayed. Compares FY24 (solid) vs FY23 (transparent) per channel. Growing impressions indicate increased brand visibility; declining impressions may signal reduced ad spend, lower organic rankings, or market saturation.<span class="note">For Organic Search: impressions = search engine result appearances. For Referral: partner website page views.</span></div>
+        <div class="cw"><canvas id="c_impr"></canvas></div></div>
+      <div class="card"><h3>CPM by Channel (€)</h3><div class="sub">Cost per 1,000 impressions — buying efficiency</div>
+        <div class="formula"><code>CPM = (Spend ÷ Impressions) × 1,000</code>. Measures how efficiently we buy reach. Lower CPM = cheaper visibility. Rising CPM YoY means the market is getting more expensive (more competition, higher bids) or our targeting is narrower.<span class="note">For Organic/Referral: CPM represents content production or partnership cost per 1K reach — not direct ad cost.</span></div>
+        <div class="cw"><canvas id="c_cpm"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Conversion Rate Analysis</h3>
-      <div class="sub">Full funnel conversion rates with YoY delta in percentage points — identify where quality is improving or declining</div>
+      <div class="sub">Full funnel conversion rates with YoY delta in percentage points</div>
+      <div class="formula">Three-stage funnel: <code>CTR = Clicks ÷ Impressions × 100</code> (ad relevance) → <code>Click→MQL = MQLs ÷ Clicks × 100</code> (landing page effectiveness) → <code>MQL→Deal = Deals ÷ MQLs × 100</code> (sales qualification quality). YoY deltas shown in <strong>percentage points (pp)</strong>, not percentages — e.g. "+2.1pp" means the rate rose from 10.0% to 12.1%. Also: <code>CPL = Spend ÷ MQLs</code> (cost per lead) and <code>CAC = Spend ÷ Deals</code> (cost to acquire one customer).<span class="note">A channel with high CTR but low Click→MQL has a targeting or landing page problem. High Click→MQL but low MQL→Deal points to weak lead qualification.</span></div>
       <table id="tConv"></table>
     </div>
     <div class="row">
-      <div class="card"><h3>Efficiency Quadrant</h3><div class="sub">CPL vs CVR — top-left = best (low cost, high conversion)</div><div class="cw tall"><canvas id="c_eff"></canvas></div></div>
-      <div class="card"><h3>ROAS by Channel</h3><div class="sub">Revenue return per euro spent: FY24 vs FY23</div><div class="cw tall"><canvas id="c_roas"></canvas></div></div>
+      <div class="card"><h3>Efficiency Quadrant</h3><div class="sub">CPL vs CVR — top-left = best (low cost, high conversion)</div>
+        <div class="formula">X-axis: <code>CPL = Spend ÷ MQLs</code> (lower = cheaper leads). Y-axis: <code>CVR = Deals ÷ MQLs × 100</code> (higher = better quality leads). Bubble size = total revenue generated. <strong>Ideal position: top-left</strong> (low cost + high conversion). Top-right = expensive but effective. Bottom-left = cheap but low quality. Bottom-right = expensive and low quality — worst case.<span class="note">Use this chart to identify channels that need optimization (bottom-right) vs channels to scale (top-left).</span></div>
+        <div class="cw tall"><canvas id="c_eff"></canvas></div></div>
+      <div class="card"><h3>ROAS by Channel</h3><div class="sub">Revenue return per euro spent: FY24 vs FY23</div>
+        <div class="formula"><code>ROAS = Revenue ÷ Spend</code>. A ROAS of 10x means every €1 invested generates €10 in revenue. Compares FY24 (solid) vs FY23 (transparent). Declining ROAS may indicate market saturation, increased competition, or diminishing returns from scaling budget.<span class="note">Note: ROAS does not account for gross margin. In production, combine with margin data for true ROI.</span></div>
+        <div class="cw tall"><canvas id="c_roas"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Full Channel Table</h3>
       <div class="sub">All KPIs per channel with volume, conversion, efficiency, and revenue metrics</div>
+      <div class="formula">Consolidated view per channel. Columns include: spend, volume metrics (MQLs, Deals) with YoY% change and target attainment%, conversion rate <code>CVR = Deals ÷ MQLs × 100</code>, revenue with YoY and target tracking, <code>MRR</code> (monthly recurring revenue), <code>MRR/Deal = MRR ÷ Deals</code> (average customer value), <code>CAC = Spend ÷ Deals</code>, and <code>ROAS = Revenue ÷ Spend</code>.<span class="note">Target attainment colors: <span style="color:#16a34a">green</span> ≥98%, <span style="color:#b45309">amber</span> 90–98%, <span style="color:#dc2626">red</span> &lt;90%.</span></div>
       <table id="tChan"></table>
     </div>
   </div>
@@ -164,49 +186,89 @@ tr:hover td{background:var(--slate50)}
   <!-- TAB 3: CAMPAIGN OPERATIONS -->
   <div id="t-campaigns" class="tab-content">
     <div class="row">
-      <div class="card"><h3>Net MRR Bridge</h3><div class="sub">How recurring revenue is built: base → new per channel → churn → ending</div><div class="cw tall"><canvas id="c_mrrBridge"></canvas></div></div>
-      <div class="card"><h3>MRR per Deal &amp; CAC Payback</h3><div class="sub">Customer quality: higher MRR/deal = faster payback</div><div class="cw tall"><canvas id="c_mrrDeal"></canvas></div></div>
+      <div class="card"><h3>Net MRR Bridge</h3><div class="sub">How recurring revenue is built: base → new per channel → churn → ending</div>
+        <div class="formula">Waterfall chart showing MRR composition: <code>Base MRR</code> = 85% of FY23 MRR (retained customers). Then each channel adds new MRR from won deals. <code>Churn</code> = estimated 10% of FY23 MRR lost. <code>Ending MRR = Base + Σ New MRR per channel − Churn</code>. This visualization shows which channels contribute most to recurring revenue growth — and whether new business outpaces churn.<span class="note">In production: Base MRR and Churn come from billing/subscription data. Here: estimated from industry-average SaaS retention rates (~90%).</span></div>
+        <div class="cw tall"><canvas id="c_mrrBridge"></canvas></div></div>
+      <div class="card"><h3>MRR per Deal &amp; CAC Payback</h3><div class="sub">Customer quality: higher MRR/deal = faster payback</div>
+        <div class="formula">Bars: <code>MRR/Deal = Total MRR ÷ Deals Won</code> — the average monthly recurring revenue per acquired customer. Higher = more valuable customers. Line: <code>CAC Payback = CAC ÷ MRR/Deal</code> — number of months to recover the acquisition cost from recurring revenue alone. Example: CAC of €50 with MRR/Deal of €200 = 0.25 months payback.<span class="note">Industry benchmark for B2B SaaS: CAC Payback &lt;12 months is healthy. &lt;6 months is excellent. &gt;18 months signals unsustainable acquisition.</span></div>
+        <div class="cw tall"><canvas id="c_mrrDeal"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Campaign Type Comparison</h3>
       <div class="sub">Cross-channel view: how does Retargeting perform across Google + Meta? How does Content compare to Paid?</div>
+      <div class="formula">Campaigns grouped by strategic type (Brand, Retargeting, Prospecting, Content, etc.) across all channels. This answers: "How does all Retargeting perform combined?" rather than per platform. Metrics: <code>CVR = Deals ÷ MQLs × 100</code>, <code>CAC = Spend ÷ Deals</code>, <code>Payback = CAC ÷ MRR/Deal</code> (months), <code>ROAS = Revenue ÷ Spend</code>.<span class="note">Use this to compare strategy effectiveness: is Retargeting (bottom-funnel) outperforming Prospecting (top-funnel)? Is Content (SEO) more cost-effective than Paid?</span></div>
       <table id="tType"></table>
     </div>
     <div class="tc">
       <h3>Campaign Detail</h3>
-      <div class="sub">All 36 campaigns with full metrics — click headers to sort</div>
+      <div class="sub">All 36 campaigns with full metrics — click column headers to sort</div>
+      <div class="formula">Granular view of every individual campaign. Click any column header to sort ascending/descending. MRR column includes YoY growth indicator. <code>CAC = Spend ÷ Deals</code>, <code>ROAS = Revenue ÷ Spend</code>. Use filters above to zoom into a specific country, channel, or campaign type.<span class="note">This table is the operational "source of truth" — drill down here when summary charts raise questions about specific campaign performance.</span></div>
       <table id="tDetail"></table>
     </div>
   </div>
 
   <!-- TAB 4: TRENDS & PACING -->
   <div id="t-trends" class="tab-content">
-    <div class="row">
-      <div class="card"><h3>Monthly MQLs</h3><div class="sub">Lead volume: FY24 vs FY23</div><div class="cw"><canvas id="c_tMql"></canvas></div></div>
-      <div class="card"><h3>Monthly Deals Won</h3><div class="sub">Conversion volume: FY24 vs FY23</div><div class="cw"><canvas id="c_tDeals"></canvas></div></div>
+    <div class="formula">
+      <strong>Trend Charts</strong> — All four charts below show monthly values (FY24 blue vs FY23 grey dashed) to identify seasonal patterns and momentum shifts. Monthly data is derived from annual totals using construction-industry seasonality weights (busier months: Mar–Jun, Sep–Nov; quieter: Jul–Aug, Dec–Jan).
     </div>
     <div class="row">
-      <div class="card"><h3>Monthly CAC (€)</h3><div class="sub">Acquisition cost trend — lower is better</div><div class="cw"><canvas id="c_tCac"></canvas></div></div>
-      <div class="card"><h3>Monthly CVR (MQL → Deal %)</h3><div class="sub">Lead quality trend</div><div class="cw"><canvas id="c_tCvr"></canvas></div></div>
+      <div class="card"><h3>Monthly MQLs</h3><div class="sub">Lead volume: FY24 vs FY23</div>
+        <div class="formula"><code>MQL</code> = Marketing Qualified Lead — a lead that meets predefined criteria (e.g. filled out form, requested demo, downloaded content). Tracks top-of-funnel health: are marketing efforts generating enough raw leads?<span class="note">Rising MQLs with stable CVR = healthy growth. Rising MQLs with declining CVR = potential quality problem.</span></div>
+        <div class="cw"><canvas id="c_tMql"></canvas></div></div>
+      <div class="card"><h3>Monthly Deals Won</h3><div class="sub">Conversion volume: FY24 vs FY23</div>
+        <div class="formula"><code>Deals Won</code> = MQLs that converted to paying customers. This is the ultimate marketing output metric — the number of new customers acquired per month. Tracks both marketing (lead gen) and sales (qualification + closing) effectiveness combined.<span class="note">Compare trajectory vs MQLs: if Deals grow slower than MQLs, the funnel has a conversion bottleneck.</span></div>
+        <div class="cw"><canvas id="c_tDeals"></canvas></div></div>
+    </div>
+    <div class="row">
+      <div class="card"><h3>Monthly CAC (€)</h3><div class="sub">Acquisition cost trend — lower is better</div>
+        <div class="formula"><code>CAC = Total Marketing Spend ÷ Deals Won</code> per month. The total cost to acquire one paying customer. Includes all channel spend (ads, content, partnerships). Trend should be stable or declining as channels mature and optimize.<span class="note">CAC spikes often correlate with seasonal low-conversion months or new campaign launches that haven't optimized yet.</span></div>
+        <div class="cw"><canvas id="c_tCac"></canvas></div></div>
+      <div class="card"><h3>Monthly CVR (MQL → Deal %)</h3><div class="sub">Lead quality trend</div>
+        <div class="formula"><code>CVR = Deals Won ÷ MQLs × 100</code> per month. Measures what percentage of marketing-qualified leads become customers. This is the key quality indicator: are we attracting the right audience? Is the sales process effective?<span class="note">Benchmark: B2B SaaS typically sees 5–15% MQL→Deal conversion. &gt;20% is excellent. &lt;5% suggests targeting or qualification issues.</span></div>
+        <div class="cw"><canvas id="c_tCvr"></canvas></div></div>
     </div>
     <div class="tc">
       <h3>Monthly Pacing vs Annual Target</h3>
       <div class="sub">Cumulative progress — are we on track to hit FY24 goals?</div>
+      <div class="formula">Each row shows one month's performance. "Cum vs Tgt" = <code>Cumulative Actual ÷ Cumulative Target × 100</code> — e.g. if by June we should have 500 MQLs (target) and we have 480, attainment = 96%. Traffic lights: <span style="color:#16a34a">green</span> ≥98% (on track), <span style="color:#b45309">amber</span> 90–98% (at risk), <span style="color:#dc2626">red</span> &lt;90% (behind plan). YoY% compares each month vs the same month last year.<span class="note">Use the cumulative columns to detect early if you're falling behind target — don't wait until December to find out.</span></div>
       <table id="tPace"></table>
     </div>
   </div>
 
   <div class="foot">
-    <h3>Assumptions &amp; Methodology</h3>
+    <h3>Data Sources &amp; Methodology</h3>
     <ul>
-      <li><strong>LY (FY23):</strong> Simulated growth rates per channel (SEO ~25-33%, Paid ~10-22%, LinkedIn ~5-8%). Production: data warehouse.</li>
-      <li><strong>Targets:</strong> Per-channel targets. SEO exceeded; LinkedIn missed. Production: annual planning OKRs.</li>
-      <li><strong>Monthly:</strong> Annual totals distributed with construction-industry seasonality + deterministic variation.</li>
-      <li><strong>Net MRR:</strong> New campaign MRR minus ~10% estimated churn. Production: billing/subscription data.</li>
-      <li><strong>CPM:</strong> (Spend ÷ Impressions) × 1,000. For Organic/Referral: content/partnership cost per 1K reach.</li>
-      <li><strong>CAC Payback:</strong> CAC ÷ MRR/Deal — months to recover acquisition cost from recurring revenue.</li>
-      <li><strong>Heatmap ROAS:</strong> Revenue ÷ Spend per country×channel combination.</li>
-      <li><strong>Insights:</strong> Auto-generated from data. In production: configurable thresholds + Slack alerts.</li>
+      <li><strong>Source data:</strong> 36 campaign rows across 3 countries (Germany, Austria, France), 5 channels (Google Ads, Meta Ads, LinkedIn Ads, Organic Search, Referral), 12 unique campaigns. Original dataset provided as CSV with FY24 annual totals.</li>
+      <li><strong>FY23 (Last Year) data:</strong> Generated by applying channel-specific growth factors to FY24 data (reverse-engineering). Growth rates reflect realistic channel maturity: SEO +20–33% YoY (strong organic growth), Paid Search +12–22% (market expansion), Meta +8–15% (scaling), LinkedIn +4–8% (newer channel), Referral +10–15%. In production: pulled from data warehouse / BI tool.</li>
+      <li><strong>FY24 Targets:</strong> Per-campaign targets derived from annual planning assumptions. Ambitious for scaling channels (LinkedIn +22%, Display +15%), conservative for mature channels (SEO -6–10% budget targets with higher efficiency expectations). In production: set via OKR planning process.</li>
+      <li><strong>Monthly distribution:</strong> Annual totals are distributed across 12 months using construction-industry seasonality weights (peak: Mar–Jun at 8.5–9.5%, Sep–Nov at 9.0–9.5%; low: Jul–Aug at 7.0–7.5%, Dec–Jan at 6.5–7.0%). Deterministic variation ensures consistency on page reload.</li>
+      <li><strong>Territory:</strong> Sub-regions assigned per country (Germany: Bayern/NRW/Berlin-Brandenburg, Austria: Wien/Westösterreich, France: Île-de-France/Sud-Est). In production: derived from campaign targeting settings or CRM data.</li>
+      <li><strong>Campaign Type:</strong> Strategic classification derived from campaign naming: Brand (branded search), Non-Brand Search, Retargeting (display + social remarketing), Lead Generation, Prospecting (lookalike), Industry Targeting (LinkedIn), Content (SEO), Referral (partnerships).</li>
+    </ul>
+    <h3 style="margin-top:12px">Key Formula Reference</h3>
+    <ul>
+      <li><strong>CTR:</strong> Clicks ÷ Impressions × 100 — measures ad/content relevance and click appeal</li>
+      <li><strong>CPM:</strong> (Spend ÷ Impressions) × 1,000 — cost to reach 1,000 people</li>
+      <li><strong>CPL:</strong> Spend ÷ MQLs — cost per marketing-qualified lead</li>
+      <li><strong>CAC:</strong> Spend ÷ Deals Won — total cost to acquire one paying customer</li>
+      <li><strong>CVR (Click→MQL):</strong> MQLs ÷ Clicks × 100 — landing page / form effectiveness</li>
+      <li><strong>CVR (MQL→Deal):</strong> Deals ÷ MQLs × 100 — lead quality and sales effectiveness</li>
+      <li><strong>ROAS:</strong> Revenue ÷ Spend — revenue generated per euro invested</li>
+      <li><strong>MRR/Deal:</strong> Total MRR ÷ Deals Won — average monthly recurring revenue per customer</li>
+      <li><strong>CAC Payback:</strong> CAC ÷ MRR/Deal — months to recover acquisition cost from recurring revenue</li>
+      <li><strong>Net MRR Bridge:</strong> Base MRR (85% retention of FY23) + New MRR per channel − Churn (10% of FY23 MRR)</li>
+      <li><strong>YoY %:</strong> (FY24 − FY23) ÷ FY23 × 100 — year-over-year growth rate</li>
+      <li><strong>Target Attainment:</strong> Actual ÷ Target × 100 — percentage of goal achieved</li>
+      <li><strong>Δ in pp:</strong> Percentage point difference (e.g. 12.1% − 10.0% = +2.1pp) — used for conversion rate comparisons</li>
+    </ul>
+    <h3 style="margin-top:12px">Production Roadmap</h3>
+    <ul>
+      <li><strong>Data integration:</strong> Replace simulated LY/targets with live connections to Google Ads API, Meta Marketing API, LinkedIn Campaign Manager API, Google Analytics 4, and CRM (HubSpot/Salesforce)</li>
+      <li><strong>MRR accuracy:</strong> Connect to billing/subscription system for actual retained MRR, expansion MRR, and churn data</li>
+      <li><strong>Attribution:</strong> Implement multi-touch attribution model to more accurately assign revenue credit across channels</li>
+      <li><strong>Alerting:</strong> Configurable thresholds with Slack/email notifications when KPIs deviate beyond tolerance</li>
+      <li><strong>Drill-down:</strong> Weekly granularity, ad group level detail, keyword-level search data</li>
     </ul>
   </div>
 </div>
