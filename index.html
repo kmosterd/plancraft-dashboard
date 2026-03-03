@@ -373,7 +373,7 @@ function gf(){const s=F.p==='fy'?D:MD.filter(r=>r.month===+F.p);return s.filter(
 function gfm(){return MD.filter(r=>(F.c==='all'||r.country===F.c)&&(F.t==='all'||r.territory===F.t)&&(F.ch==='all'||r.channel===F.ch)&&(F.ty==='all'||r.campaignType===F.ty));}
 function pf(){
   const el=(id,opts,lbl)=>{const e=document.getElementById(id);const v=e.value;e.innerHTML=`<option value="all">${lbl}</option>`+opts.map(o=>`<option value="${o}"${o===v?' selected':''}>${o}</option>`).join('');};
-  document.getElementById('fP').innerHTML='<option value="fy">Full Year</option>'+MN.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  document.getElementById('fP').innerHTML='<option value="fy"'+(F.p==='fy'?' selected':'')+'>Full Year</option>'+MN.map((m,i)=>`<option value="${i}"${String(i)===String(F.p)?' selected':''}>${m}</option>`).join('');
   el('fC',[...new Set(D.map(r=>r.country))].sort(),'All Countries');
   el('fCh',CO.filter(c=>D.some(r=>r.channel===c)),'All Channels');
   el('fTy',[...new Set(D.map(r=>r.campaignType))].sort(),'All Types');
